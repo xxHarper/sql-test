@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<main id="main" class="reading page">
+<a class="back-link" href="{{ url_for('candidate.welcome') }}">← Inicio</a>
+<div class="eyebrow">ANTES DE COMENZAR</div>
+<h1>Hola, {{ evaluation.name }}.</h1>
+<p class="lead">Tómate un momento para leer las instrucciones.</p>
+<div class="metrics three">
+<div class="card">
+<span class="muted">Duración</span>
+<strong>{{ exam.duration_minutes }} <small>minutos</small>
+</strong>
+</div>
+<div class="card">
+<span class="muted">Extensión</span>
+<strong>{{ exam.question_count }} <small>preguntas</small>
+</strong>
+</div>
+<div class="card">
+<span class="muted">Puntaje</span>
+<strong>{{ exam.max_score }} <small>puntos</small>
+</strong>
+</div>
+</div>
+<section class="card instructions">
+<h2>{{ exam.title }}</h2>
+<p class="muted">{{ exam.description }}</p>
+<ol>{% for instruction in exam.instructions %}<li>{{ instruction }}</li>{% endfor %}</ol>
+<h3>Uso de la plataforma</h3>
+<ol>
+<li>Responde las preguntas de opción múltiple y escribe tus consultas SQL y respuestas abiertas.</li>
+<li>Puedes ir a cualquier pregunta y revisar tus respuestas antes de entregar.</li>
+<li>Las respuestas se guardan automáticamente mientras exista conexión con el servidor local. Verifica el indicador de guardado.</li>
+<li>Al recargar, tu evaluación continúa en este navegador. El reloj sigue corriendo aunque cierres la página.</li>
+<li>Al llegar a cero, el servidor entrega las respuestas que alcanzaron a guardarse.</li>
+<li>La entrega es definitiva. Tus resultados serán revisados por el equipo evaluador.</li>
+</ol>
+<div class="notice info">No necesitas ejecutar las consultas. Escribe el SQL que usarías; será revisado manualmente.</div>
+</section>
+<form method="post" action="{{ url_for('candidate.start') }}" class="start-row">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<span class="micro">El temporizador comienza al presionar el botón.</span>
+<button class="button primary large" type="submit">Comenzar evaluación <span>→</span>
+</button>
+</form>
+</main>
+{% endblock %}

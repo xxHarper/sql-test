@@ -1,0 +1,3 @@
+# Solo para la comprobación opcional en navegador; no se necesita para operar.
+-r requirements.txt
+playwright==1.64.0

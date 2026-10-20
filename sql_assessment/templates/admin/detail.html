@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% from 'admin/_guide.html' import grading_guide %}
+{% from '_tables.html' import table %}
+{% block title %}Revisión · SQL Assessment{% endblock %}
+{% block content %}<main id="main" class="container page">
+<a class="back-link" href="{{ url_for('admin.dashboard') }}">← Todas las evaluaciones</a>
+<div class="page-heading">
+<div>
+<div class="eyebrow">REVISIÓN INDIVIDUAL · {{ evaluation.code }}</div>
+<p class="micro">{{ exam.title }} · {{ exam.exam_id }} · versión {{ exam.version }}</p>
+<h1>{{ evaluation.name or 'Código sin asignar' }}</h1>
+<span class="badge status-{{ evaluation.status }}">{{ status_labels[evaluation.status] }}</span>
+</div>
+<div class="score-summary">
+<strong>{{ '%g'|format(total) }}<small> / 100</small>
+</strong>
+<span>{{ classification if evaluation.status=='graded' else 'Puntaje parcial · pendiente de finalizar' }}</span>
+</div>
+</div>
+<div class="metrics three compact">
+<div class="card">
+<span class="muted">Inicio</span>
+<strong>{{ evaluation.started_at|moment }}</strong>
+</div>
+<div class="card">
+<span class="muted">Entrega</span>
+<strong>{{ evaluation.submitted_at|moment }}</strong>
+</div>
+<div class="card">
+<span class="muted">Tiempo utilizado</span>
+<strong>{% if evaluation.started_at is not none %}{{ ([((evaluation.submitted_at or current_time)-evaluation.started_at),(evaluation.deadline-evaluation.started_at)]|min)|elapsed }}{% else %}—{% endif %}</strong>
+</div>
+</div>
+{% set editable=evaluation.status in ['submitted','expired','graded'] %}{% if not editable %}<div class="notice info">La revisión estará disponible después de la entrega. Las respuestas en curso pueden cambiar.</div>{% endif %}
+<form method="post" id="grading-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="grading-layout">
+<div class="grading-questions">{% for q in questions %}<section class="card grading-question">
+<div class="card-topline">
+<span class="eyebrow">{{ q.source_id }} · {{ q.section }}</span>
+<span class="badge">{{ q.points }} puntos</span>
+</div>
+<h2>{{ q.title }}</h2>
+<p class="muted">{{ q.prompt }}</p>
+{% for t in q.tables %}{{ table(t.name, t.columns, t.rows) }}{% endfor %}
+<label>Respuesta del candidato</label>
+<pre class="candidate-answer {{ 'mono' if q.kind=='sql' }}">{{ q.answer_text }}</pre>
+<details class="answer-guide">
+<summary>Guía y criterios de calificación</summary>
+{{ grading_guide(q) }}
+</details>
+<div class="grading-fields">
+<div class="score-field">
+<label for="score-{{ q.id }}">{{ 'Puntaje automático' if q.kind=='choice' else 'Puntaje' }}</label>{% if q.kind=='choice' %}<strong>{{ '%g'|format(q.score or 0) }} / {{ q.points }}</strong>{% else %}<div class="score-input">
+<input id="score-{{ q.id }}" type="number" name="score_{{ q.id }}" min="0" max="{{ q.points }}" step="any" value="{{ '%g'|format(q.score) if q.score is not none else '' }}" {% if not editable %}disabled{% endif %} aria-label="Puntaje de pregunta {{ q.id }}">
+<span>/ {{ q.points }}</span>
+</div>{% endif %}</div>
+<div class="comment-field">
+<label for="comment-{{ q.id }}">Comentario del evaluador</label>
+<textarea id="comment-{{ q.id }}" name="comment_{{ q.id }}" maxlength="3000" rows="2" placeholder="Observaciones sobre esta respuesta…" {% if not editable %}disabled{% endif %}>{{ q.comment or '' }}</textarea>
+</div>
+</div>
+</section>{% endfor %}</div>
+<aside class="review-sidebar">
+<div class="card">
+<h3>Revisión del evaluador</h3>
+<p class="muted">{{ exam.question_count - exam.manual_count }} preguntas de calificación automática.<br>{{ exam.manual_count }} preguntas de revisión manual.</p>
+<p class="micro">Puedes guardar una revisión incompleta. Para finalizar, asigna los {{ exam.manual_count }} puntajes manuales.</p>{% if editable %}<button class="button secondary full" type="submit" name="action" value="save">Guardar revisión</button>
+<button class="button primary full" type="submit" name="action" value="finalize">Finalizar calificación ✓</button>{% endif %}</div>
+<div class="card classification">
+<h3>Referencia orientativa</h3>
+<p>
+<strong>85–100</strong> Muy buen candidato</p>
+<p>
+<strong>70–84</strong> Buen candidato</p>
+<p>
+<strong>55–69</strong> Con potencial</p>
+<p>
+<strong>0–54</strong> Requiere reforzar conocimientos</p>
+<span class="micro">Con decimales se usan umbrales: ≥85, ≥70 y ≥55.</span>
+</div>
+<div class="card history">
+<h3>Historial de actividad</h3>{% for e in history %}<div>
+<span>{{ e.action }}</span>
+<time class="micro">{{ e.at|moment }}</time>
+</div>{% endfor %}</div>
+</aside>
+</div>
+</form>
+</main>{% endblock %}

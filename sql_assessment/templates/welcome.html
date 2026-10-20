@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<main id="main" class="landing container">
+  <div class="landing-copy">
+<div class="eyebrow">
+<span class="blue-dot">
+</span> EVALUACIÓN TÉCNICA · NIVEL JUNIOR</div>
+    <h1>Los buenos datos<br>empiezan con<br>
+<span>buenas bases.</span>
+</h1>
+    <p class="lead">Un espacio para demostrar lo que sabes de SQL, bases de datos y migración de información.</p>
+    <div class="landing-actions">{% if evaluation and evaluation.status in ['not_started','in_progress'] %}<a class="button primary large" href="{{ url_for('candidate.exam') }}">Continuar mi evaluación <span>→</span>
+</a>{% elif evaluation %}<a class="button primary large" href="{{ url_for('candidate.thanks') }}">Ver confirmación de entrega →</a>{% else %}<a class="button primary large" href="{{ url_for('candidate.access') }}">Acceder a mi evaluación <span>→</span>
+</a>{% endif %}</div>
+    <p class="micro">Necesitarás el código que te proporcionó el administrador.</p>
+    <div class="trust-line">
+<span>◷ {{ exam.duration_minutes }} minutos</span>
+<span>▤ {{ exam.question_count }} preguntas</span>
+<span>◎ {{ exam.max_score }} puntos</span>
+</div>
+  </div>
+  <div class="overview-card card">
+<div class="card-topline">
+<span class="eyebrow">TU EVALUACIÓN</span>
+<span class="badge blue">Fundamentos</span>
+</div>
+<h2>De la teoría a los datos.</h2>
+<p class="muted">{{ exam.sections|length }} secciones para conocer tu forma de pensar.</p>
+    {% for section in exam.sections %}<div class="section-preview"><span class="section-icon">{{ '%02d'|format(loop.index) }}</span><div><h3>{{ section.title }}</h3></div><span class="points">{{ section.points }} <small>pts</small></span></div>{% endfor %}
+<div class="overview-note">
+<span class="blue-text">✓</span>
+<p>Tu avance se guarda automáticamente.<br>Concéntrate en resolver, una pregunta a la vez.</p>
+</div>
+  </div>
+</main>
+{% endblock %}

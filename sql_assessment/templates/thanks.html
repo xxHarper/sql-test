@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}<main id="main" class="narrow page center">
+<div class="card thanks-card">
+<div class="success-icon" aria-hidden="true">✓</div>
+<span class="eyebrow">EVALUACIÓN RECIBIDA</span>
+<h1>Gracias, {{ evaluation.name }}.</h1>
+<p class="lead">Tu evaluación se guardó correctamente.</p>
+<p class="muted">{{ 'Se entregaron automáticamente tus respuestas al terminar el tiempo.' if evaluation.delivery_reason=='timeout' else 'El equipo evaluador revisará tus respuestas.' }}<br>Ya puedes cerrar esta página.</p>
+<div class="receipt">
+<span>Referencia</span>
+<strong>{{ evaluation.code }}</strong>
+<span>Entrega</span>
+<time>{{ evaluation.submitted_at|moment }}</time>
+</div>
+<form method="post" action="{{ url_for('candidate.leave') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<button class="button secondary full" type="submit">Finalizar sesión</button>
+</form>
+</div>
+</main>{% endblock %}

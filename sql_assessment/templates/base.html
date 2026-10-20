@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="theme-color" content="#10141d">
+  <title>{% block title %}SQL Assessment{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <script src="{{ url_for('static', filename='common.js') }}" defer>
+</script>
+  {% block scripts %}{% endblock %}
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('admin.dashboard') if admin_mode else url_for('candidate.welcome') }}" aria-label="SQL Assessment, inicio">
+      <span class="brand-icon" aria-hidden="true">S<span>Q</span>
+</span>
+<span>SQL <strong>Assessment</strong>
+</span>
+    </a>
+    <div class="topbar-right">
+<span class="local-indicator">
+<i>
+</i> Entorno local</span>
+      {% if admin_mode %}<span class="divider">
+</span>
+<span class="muted">Administrador</span>
+<form method="post" action="{{ url_for('admin.logout') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<button class="button small ghost" type="submit">Cerrar sesión</button>
+</form>
+      {% else %}<a class="admin-link" href="{{ url_for('admin.dashboard') }}">Administración <span aria-hidden="true">↗</span>
+</a>{% endif %}
+    </div>
+  </header>
+  {% if admin_mode %}
+  <nav class="admin-nav" aria-label="Administración">
+<a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' }}">Evaluaciones</a>
+<a href="{{ url_for('admin.guide') }}" class="{{ 'active' if request.endpoint == 'admin.guide' }}">Guía de calificación</a>
+<a href="{{ url_for('admin.export') }}">Exportar resultados ↗</a>
+</nav>
+  {% endif %}
+  <div class="flash-area" aria-live="polite">{% for category, message in get_flashed_messages(with_categories=true) %}<div class="notice {{ category }}">{{ message }}</div>{% endfor %}</div>
+  {% block content %}{% endblock %}
+  <footer class="footer">
+<span>SQL Assessment <span class="footer-dot">·</span> Evaluación de fundamentos</span>
+<span>Datos almacenados en esta red local <span class="tiny-lock" aria-hidden="true">◇</span>
+</span>
+</footer>
+</body>
+</html>

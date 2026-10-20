@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% from '_tables.html' import table %}
+{% block title %}Evaluación en curso · SQL Assessment{% endblock %}
+{% block scripts %}<script src="{{ url_for('static',filename='exam.js') }}" defer>
+</script>{% endblock %}
+{% block content %}
+<main id="main" class="exam-layout" data-evaluation="{{ evaluation.id }}">
+<aside class="exam-sidebar">
+<div class="eyebrow">TU EVALUACIÓN</div>
+<h2>{{ evaluation.name }}</h2>
+<p class="micro">{{ exam.title }}</p>
+<div class="progress-heading">
+<span>Tu progreso</span>
+<strong id="progress-label">0 de {{ questions|length }}</strong>
+</div>
+<progress id="progress" max="{{ questions|length }}" value="0">0/{{ questions|length }}</progress>
+<span class="micro">Preguntas con respuesta</span>
+<nav class="question-nav" aria-label="Preguntas de la evaluación">{% set navigation = namespace(section=0) %}{% for q in questions %}{% if loop.first or q.section_id != questions[loop.index0-1].section_id %}{% set navigation.section = navigation.section + 1 %}<div class="nav-section">
+<span>{{ '%02d'|format(navigation.section) }}</span> {{ q.section }}</div>{% endif %}<button class="question-link" type="button" data-go="{{ loop.index0 }}">
+<span class="question-number">{{ '%02d'|format(q.id) }}</span>
+<span>{{ q.title }}</span>
+<span class="answer-mark" aria-label="Sin respuesta">○</span>
+</button>{% endfor %}</nav>
+<div class="sidebar-tip">
+<span aria-hidden="true">◇</span>
+<p>Puedes volver a cualquier pregunta antes de entregar.</p>
+</div>
+</aside>
+<div class="exam-main">
+<div class="exam-toolbar">
+<span class="eyebrow" id="current-section">{{ questions[0].section|upper }}</span>
+<div class="timer" role="timer" aria-label="Tiempo restante">
+<span aria-hidden="true">◷</span>
+<span id="timer">{{ exam.duration_minutes }}:00</span>
+<small>restantes</small>
+</div>
+</div>
+<div id="network-alert" class="notice error" role="alert" hidden>
+</div>
+<div class="exam-content" id="question-area" aria-live="polite">
+{% for q in questions %}<section class="question-card card" data-question="{{ q.id }}" data-source-id="{{ q.source_id }}" data-kind="{{ q.kind }}" data-section="{{ q.section }}" {% if not loop.first %}hidden{% endif %}>
+<div class="card-topline">
+<span class="question-counter">PREGUNTA {{ '%02d'|format(q.id) }} <span>/ {{ questions|length }}</span>
+</span>
+<span class="badge">{{ q.points }} puntos</span>
+</div>
+<h1 tabindex="-1">{{ q.title }}</h1>
+<p class="question-prompt" id="prompt-{{ q.id }}">{{ q.prompt }}</p>
+{% if q.kind == 'choice' %}<fieldset class="options" aria-labelledby="prompt-{{ q.id }}">
+<legend class="sr-only">Selecciona una opción</legend>{% for option in q.options %}<label class="option">
+<input type="radio" name="answer-{{ q.id }}" value="{{ option.id }}" data-answer="{{ q.id }}">
+<span class="option-letter">{{ option.id }}</span>
+<span>{{ option.text }}</span>
+<span class="radio-visual" aria-hidden="true">
+</span>
+</label>{% endfor %}</fieldset>
+<p class="micro">Selecciona una sola respuesta.</p>
+{% else %}
+{% if q.tables %}<details class="data-reference" open><summary>Tablas de referencia <span class="micro">Datos ficticios</span></summary><div class="tables-grid">{% for t in q.tables %}{{ table(t.name, t.columns, t.rows) }}{% endfor %}</div></details>{% endif %}
+<div class="answer-editor {{ 'sql-editor' if q.kind == 'sql' }}">
+<div class="editor-toolbar">
+<label for="answer-{{ q.id }}">{{ 'Tu consulta SQL' if q.kind == 'sql' else 'Tu respuesta' }}</label>
+<span>{{ 'SQL' if q.kind == 'sql' else 'TEXTO' }}</span>
+</div>
+<textarea id="answer-{{ q.id }}" data-answer="{{ q.id }}" maxlength="12000" rows="{{ 8 if q.kind=='sql' else 10 }}" placeholder="{{ 'Escribe tu consulta aquí…' if q.kind=='sql' else 'Explica tu razonamiento aquí…' }}" spellcheck="{{ 'false' if q.kind=='sql' else 'true' }}" aria-describedby="prompt-{{ q.id }}">
+</textarea>
+</div>
+<p class="micro">{{ 'Tu consulta no se ejecutará. Será revisada por el evaluador.' if q.kind=='sql' else 'Sé claro y concreto. Puedes usar listas y ejemplos.' }} <span class="character-count" data-count="{{ q.id }}">0 / 12,000</span>
+</p>
+{% endif %}</section>{% endfor %}
+</div>
+<div class="exam-bottom">
+<div id="save-status" class="save-status" role="status">Conectando con el servidor…</div>
+<div class="question-actions">
+<button class="button ghost" type="button" id="previous">← Anterior</button>
+<button class="button secondary" type="button" id="next">Siguiente →</button>
+<button class="button primary" type="button" id="review-submit" hidden>Revisar y entregar →</button>
+</div>
+</div>
+<div class="exam-hint">
+<span>Tu progreso está vinculado a este navegador.</span>
+<button class="text-button" type="button" id="open-submit">Entregar evaluación</button>
+</div>
+<noscript>
+<div class="notice error">Esta evaluación requiere JavaScript. Actívalo y recarga antes de responder. El reloj del servidor continúa.</div>
+</noscript>
+</div>
+</main>
+<dialog id="submit-dialog" aria-labelledby="submit-title">
+<div class="dialog-content">
+<span class="eyebrow">ÚLTIMA REVISIÓN</span>
+<h2 id="submit-title">¿Entregar tu evaluación?</h2>
+<p>Has respondido <strong id="answered-count">0</strong> de {{ questions|length }} preguntas.</p>
+<p class="muted">Después de entregar no podrás hacer cambios. Las preguntas sin respuesta recibirán cero puntos según la revisión del evaluador.</p>
+<div id="submit-error" class="notice error" role="alert" hidden>
+</div>
+<div class="dialog-actions">
+<button type="button" class="button ghost" id="cancel-submit">Seguir revisando</button>
+<button type="button" class="button primary" id="confirm-submit">Confirmar entrega</button>
+</div>
+</div>
+</dialog>
+{% endblock %}

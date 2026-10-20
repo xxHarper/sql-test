@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Acceso · SQL Assessment{% endblock %}
+{% block content %}
+<main id="main" class="narrow page">
+<a class="back-link" href="{{ url_for('candidate.welcome') }}">← Volver al inicio</a>
+<div class="card auth-card">
+<span class="eyebrow">PORTAL DEL CANDIDATO</span>
+<h1>Tu siguiente paso.</h1>
+<p class="muted">Ingresa tus datos para consultar las instrucciones. El tiempo aún no comienza.</p>
+<form method="post" class="stack" action="{{ url_for('candidate.access') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div>
+<label for="name">Nombre completo</label>
+<input id="name" name="name" autocomplete="name" placeholder="Tal como quieres que te identifiquemos" minlength="3" maxlength="120" value="{{ request.form.get('name','') }}" required autofocus>
+</div>
+<div>
+<label for="code">Código de evaluación</label>
+<input id="code" name="code" class="code-input" placeholder="SQL-XXXXXXXX" maxlength="12" autocomplete="off" spellcheck="false" value="{{ request.form.get('code','') }}" required>
+<p class="micro">El código es personal y solo puede utilizarse una vez.</p>
+</div>
+<button class="button primary full" type="submit">Ver instrucciones <span>→</span>
+</button>
+</form>
+</div>
+<p class="center micro">Usa el mismo navegador durante toda la evaluación.</p>
+</main>
+{% endblock %}

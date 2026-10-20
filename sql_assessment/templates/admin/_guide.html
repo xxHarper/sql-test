@@ -1,0 +1,6 @@
+{% macro grading_guide(q) %}
+<pre>{{ q.guide }}</pre>
+{% if q.kind == 'choice' %}<p class="micro">Opción correcta: {{ q.correct }} · {{ q.points }} puntos. Otras opciones o sin respuesta: 0 puntos.</p>
+{% else %}<ul class="muted">{% for criterion in q.grading.rubric %}<li>{{ criterion.criterion }} — {{ criterion.points }} puntos</li>{% endfor %}</ul>
+{% if q.grading.notes %}<p class="muted">{{ q.grading.notes }}</p>{% endif %}{% endif %}
+{% endmacro %}

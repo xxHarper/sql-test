@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}<main id="main" class="narrow page">
+<a class="back-link" href="{{ url_for('candidate.welcome') }}">← Portal del candidato</a>
+<div class="card auth-card">
+<span class="eyebrow">ADMINISTRACIÓN</span>
+<h1>Acceso del evaluador.</h1>
+<p class="muted">Gestiona evaluaciones y revisa las respuestas de tus candidatos.</p>{% if not configured %}<div class="notice error">Configura la contraseña en la computadora del servidor ejecutando iniciar.bat. No se permite configurar credenciales desde la red.</div>{% else %}<form method="post" class="stack">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div>
+<label for="password">Contraseña de administrador</label>
+<input id="password" type="password" name="password" required maxlength="256" autocomplete="current-password" autofocus>
+</div>
+<button class="button primary full" type="submit">Entrar al panel →</button>
+</form>{% endif %}</div>
+</main>{% endblock %}

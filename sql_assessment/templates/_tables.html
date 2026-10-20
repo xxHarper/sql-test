@@ -1,0 +1,12 @@
+{% macro table(title, headers, rows) %}<div class="reference-table">
+<div class="table-label">
+<span aria-hidden="true">▦</span> {{ title }}</div>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>{% for header in headers %}<th scope="col">{{ header }}</th>{% endfor %}</tr>
+</thead>
+<tbody>{% for row in rows %}<tr>{% for value in row %}<td>{{ value if value is not none else 'NULL' }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table>
+</div>
+</div>{% endmacro %}

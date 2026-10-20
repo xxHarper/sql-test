@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}<main id="main" class="narrow page">
+<div class="card auth-card">
+<span class="eyebrow">ERROR {{ error.code }}</span>
+<h1>No se pudo completar la solicitud.</h1>
+<p class="muted">{{ error.description }}</p>
+<a class="button secondary" href="{{ url_for('candidate.welcome') }}">Volver al inicio</a>
+</div>
+</main>{% endblock %}

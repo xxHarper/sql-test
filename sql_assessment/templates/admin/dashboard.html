@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Evaluaciones · SQL Assessment{% endblock %}
+{% block content %}<main id="main" class="container page dashboard">
+<div class="page-heading">
+<div>
+<div class="eyebrow">PANEL DE ADMINISTRACIÓN</div>
+<h1>Evaluaciones</h1>
+<p class="muted">Una vista clara del avance de tus candidatos.</p>
+</div>
+<a class="button secondary" href="{{ url_for('admin.export') }}">↓ Exportar CSV</a>
+</div>
+<div class="metrics four">
+<div class="card">
+<span class="muted">Evaluaciones creadas</span>
+<strong>{{ total }}</strong>
+<span class="micro">{{ counts.not_started }} pendientes de inicio</span>
+</div>
+<div class="card">
+<span class="muted">En proceso</span>
+<strong class="blue-text">{{ counts.in_progress }}</strong>
+<span class="micro">Evaluaciones activas</span>
+</div>
+<div class="card">
+<span class="muted">Por revisar</span>
+<strong>{{ counts.submitted+counts.expired }}</strong>
+<span class="micro">Entregadas o vencidas</span>
+</div>
+<div class="card">
+<span class="muted">Calificadas</span>
+<strong class="green-text">{{ counts.graded }}</strong>
+<span class="micro">Con resultado final</span>
+</div>
+</div>
+<section class="card code-generator">
+<div>
+<h2>Una oportunidad, un código.</h2>
+<p class="muted">Genera códigos individuales y compártelos con tus candidatos.</p>
+</div>
+<form method="post" action="{{ url_for('admin.create_codes') }}" class="inline-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label for="version-id" class="sr-only">Evaluación y versión</label>
+<select id="version-id" name="version_id" required>{% for v in versions %}<option value="{{ v.id }}">{{ v.title }} · v{{ v.version }}</option>{% endfor %}</select>
+<label for="count" class="sr-only">Cantidad de códigos</label>
+<input type="number" id="count" name="count" value="1" min="1" max="25" required>
+<button class="button primary" type="submit">+ Crear códigos</button>
+</form>
+</section>
+<section class="card results-card">
+<div class="results-heading">
+<h2>Candidatos e historial <span class="badge">{{ evaluations|length }}</span>
+</h2>
+<form method="get" class="filters">
+<label class="sr-only" for="search">Buscar candidato o código</label>
+<input id="search" type="search" name="q" value="{{ query }}" placeholder="Buscar nombre o código…">
+<label class="sr-only" for="status">Estado</label>
+<select id="status" name="estado">
+<option value="">Todos los estados</option>{% for key,label in status_labels.items() %}<option value="{{ key }}" {% if selected_status==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<button class="button small secondary" type="submit">Filtrar</button>
+</form>
+</div>
+<div class="table-scroll">
+<table class="results-table">
+<thead>
+<tr>
+<th>Candidato / código</th>
+<th>Estado</th>
+<th>Tiempo utilizado</th>
+<th>Resultado</th>
+<th>Creación</th>
+<th>
+<span class="sr-only">Acciones</span>
+</th>
+</tr>
+</thead>
+<tbody>{% for e in evaluations %}<tr>
+<td>
+<strong>{{ e.name or 'Sin asignar' }}</strong>
+<div class="micro">{{ e.exam_title }} · v{{ e.version }}</div>
+<div class="code-row">
+<code>{{ e.code }}</code>{% if not e.candidate_token %}<button class="copy-button" type="button" data-copy="{{ e.code }}" aria-label="Copiar código {{ e.code }}">Copiar</button>{% endif %}</div>
+</td>
+<td>
+<span class="badge status-{{ e.status }}">{{ status_labels[e.status] }}</span>{% if e.status=='not_started' and e.candidate_token %}<div class="micro">Acceso registrado</div>{% endif %}</td>
+<td class="mono">{% if e.started_at is not none %}{{ ([((e.submitted_at or current_time)-e.started_at), (e.deadline-e.started_at)]|min)|elapsed }}{% else %}—{% endif %}</td>
+<td>{% if e.status=='graded' %}<strong>{{ '%g'|format(e.total) }} <span class="muted">/ 100</span>
+</strong>
+<div class="micro">{{ classification(e.total) }}</div>{% elif e.status in ['submitted','expired'] %}<span class="muted">{{ e.reviewed }}/{{ e.manual_count }} revisadas</span>{% else %}—{% endif %}</td>
+<td class="micro">{{ e.created_at|moment }}</td>
+<td>
+<a class="button small ghost" href="{{ url_for('admin.detail',evaluation_id=e.id) }}">{{ 'Revisar' if e.status in ['submitted','expired'] else 'Ver detalle' }} →</a>
+</td>
+</tr>{% else %}<tr>
+<td colspan="6">
+<div class="empty-state">
+<span aria-hidden="true">▦</span>
+<h3>{{ 'Sin coincidencias' if total else 'Tu primera evaluación empieza aquí.' }}</h3>
+<p class="muted">{{ 'Prueba con otro nombre, código o estado.' if total else 'Crea un código para invitar a tu primer candidato.' }}</p>
+</div>
+</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>
+</section>
+<p class="micro">Actualiza la página para consultar el estado más reciente. Las fechas del historial se muestran en UTC.</p>
+</main>{% endblock %}
