@@ -7,7 +7,8 @@
 <div class="page-heading">
 <div>
 <div class="eyebrow">REVISIÓN INDIVIDUAL · {{ evaluation.code }}</div>
-<p class="micro">{{ exam.title }} · {{ exam.exam_id }} · revisión {{ exam.version }}</p>
+<p class="micro">{{ exam.title }} · {{ exam.exam_id }} · revisión {{ exam.version }}{% if exam.publication_version %} · versión {{ exam.publication_version }}{% endif %}</p>
+{% if candidate %}<a href="{{ url_for('admin.candidate_detail',candidate_id=candidate.candidate_id) }}">Ver evaluaciones del candidato →</a>{% endif %}
 <h1>{{ evaluation.name or 'Código sin asignar' }}</h1>
 <span class="badge status-{{ evaluation.status }}">{{ status_labels[evaluation.status] }}</span>
 </div>
@@ -63,7 +64,7 @@
 </section>{% endfor %}</div>
 <aside class="review-sidebar">
 <div class="card">
-<h3>Revisión del evaluador</h3>
+<h3>Revisión del evaluador</h3>{% if exam.resources %}<p class="micro">Acepta funciones equivalentes en español o inglés y separadores ; o ,. Evalúa la lógica manualmente. En VBA también se acepta pseudocódigo razonado con crédito parcial.</p>{% endif %}
 <p class="muted">{{ exam.question_count - exam.manual_count }} preguntas de calificación automática.<br>{{ exam.manual_count }} preguntas de revisión manual.</p>
 <p class="micro">Puedes guardar una revisión incompleta. Para finalizar, asigna los {{ exam.manual_count }} puntajes manuales.</p>{% if editable %}<button class="button secondary full" type="submit" name="action" value="save">Guardar revisión</button>
 <button class="button primary full" type="submit" name="action" value="finalize">Finalizar calificación ✓</button>{% endif %}</div>

@@ -26,7 +26,7 @@
   async function api(path, payload) {
     const response = await fetch(path, {
       method: payload ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store',
-      headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+      headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf, 'X-Evaluation-ID': root.dataset.evaluation},
       body: payload ? JSON.stringify(payload) : undefined,
       signal: AbortSignal.timeout(10000)
     });
@@ -35,7 +35,7 @@
     catch { throw new Error('No se pudo verificar la sesión. Conserva la página abierta e intenta recargar.'); }
     if (!response.ok) {
       if (['submitted', 'expired', 'graded'].includes(data.status)) return finishScreen();
-      if (data.status === 'conflict') {
+      if (data.status === 'conflict' || (response.status === 409 && !data.status)) {
         locked = true;
         disableAnswers(true);
         document.getElementById('confirm-submit').disabled = true;

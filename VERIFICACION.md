@@ -113,3 +113,72 @@ Los 13 wheels incluidos se validaron como archivos ZIP íntegros. Se incluye `wh
 - La comprobación de navegador se realizó en Chromium; no se ejecutó una matriz de navegadores.
 - No se probó una conexión desde otro dispositivo físico. Antes del primer examen real, comprueba la IP privada, el permiso del firewall y el acceso desde otro equipo de tu LAN.
 - Las pruebas usan datos temporales. No hay contraseña preconfigurada ni evaluaciones de demostración en la base de producción.
+
+
+## Integración Excel Junior — 20 de octubre de 2026
+
+Implementada en la aplicación Flask existente. Se leyó íntegro el adjunto disponible `prompt_codex_excel_junior.md` (su nombre no trae el sufijo V2; incluye la navegación explícita solicitada), y se conservaron sin cambios los archivos fuente oficiales de SQL, su temporizador y sus criterios. No se modificaron `run.py`, dependencias, configuración de puerto ni el cambio previo del usuario en `iniciar.bat`.
+
+### Funcionalidades
+
+- Inicio `/` y `/evaluaciones` con selector SQL Junior / Excel Junior, tarjetas con tiempos, puntos y cantidad de preguntas.
+- Excel: 12 reactivos exactos, 100 puntos, 45 minutos; cinco opciones múltiples autocorregidas por 20 puntos y siete abiertas por 80 puntos con corrección manual parcial, referencias y criterios completos para administrador. Se conserva íntegro el JSON original dentro de la instantánea privada.
+- Descarga autenticada de plantilla XLSX desde instrucciones y examen, con versión congelada en SQLite y SHA-256 comprobado antes de importar y al descargar. Tablas de apoyo e instrucciones disponibles en el navegador. No hay recepción de archivos, ejecución de fórmulas ni VBA.
+- Identidad reutilizable en el mismo navegador y múltiples intentos independientes. «Volver a Evaluaciones» conserva la identidad; códigos SQL y EXC mantienen autorización individual. El servidor comprueba que las escrituras del navegador corresponden al intento de la pestaña. No se fusionan personas por nombre.
+- Panel y exportación CSV filtrables por evaluación; historial por candidato con tiempo, estado, avance de corrección y enlaces a respuestas de cada intento. Guías y soluciones requieren sesión de administrador.
+- Importación idempotente del formato SQL anterior y del formato español nuevo. Una publicación Excel con igual versión semántica y contenido diferente se rechaza; una nueva versión no cambia intentos anteriores. Recursos y preguntas tienen protección de inmutabilidad en SQLite.
+
+### Archivos agregados
+
+| Archivo | Función |
+|---|---|
+| `evaluaciones/reactivos_excel_junior.json` | Copia exacta del banco entregado, fuera de los recursos públicos. |
+| `evaluaciones/plantilla_excel_junior.xlsx` | Copia exacta de la plantilla declarada en el JSON. |
+| `sql_assessment/excel.py` | Adaptador validado al esquema canónico, conservando referencias y descripciones de rúbrica. |
+| `sql_assessment/templates/_resources.html` | Descarga e instrucciones/tablas de apoyo. |
+| `sql_assessment/templates/admin/candidate.html` | Historial de ambas evaluaciones por identidad de candidato. |
+| `tests/test_excel.py` | 15 pruebas de integración Excel, recursos, identidad, seguridad y migraciones. |
+
+### Archivos modificados
+
+| Archivo | Cambio |
+|---|---|
+| `sql_assessment/exams.py` | Validación/adaptación, recursos privados, publicaciones semánticas y proyecciones seguras. |
+| `sql_assessment/db.py` | Respaldo previo consistente con WAL, tablas adicionales y protecciones de inmutabilidad. |
+| `sql_assessment/candidate.py` | Selector, identidad reutilizable, cambio de intento con propiedad validada, descarga y protección ante pestañas de otro intento. |
+| `sql_assessment/admin.py` | Filtro por examen, historial por candidato, CSV filtrado y códigos EXC. |
+| `sql_assessment/static/app.css` | Tarjetas, recursos y adaptación del selector a móvil. |
+| `sql_assessment/static/exam.js` | Identificador del intento en solicitudes; bloqueo de pestañas que pertenecen a otro intento. |
+| `sql_assessment/templates/welcome.html` | Selección de exámenes e intentos propios. |
+| `sql_assessment/templates/access.html` | Selección de evaluación y nombre reutilizado. |
+| `sql_assessment/templates/instructions.html` | Instrucciones Excel, versión y descarga. |
+| `sql_assessment/templates/exam.html` | Recurso de práctica y regreso al selector. |
+| `sql_assessment/templates/thanks.html` | Regreso al selector sin perder identidad. |
+| `sql_assessment/templates/admin/dashboard.html` | Filtro de evaluación y enlace al historial por candidato. |
+| `sql_assessment/templates/admin/detail.html` | Identidad, versión y aceptación de equivalencias regionales/VBA. |
+| `sql_assessment/templates/admin/_guide.html` | Justificaciones automáticas y descripciones completas de criterios. |
+| `sql_assessment/templates/admin/guide.html` | Versión semántica de la publicación consultada. |
+| `tests/test_v2.py` | Mantiene las comprobaciones exactas de SQL y ajusta las expectativas a la coexistencia con Excel. |
+| `tests/browser_check.py` | Recorrido de ambos exámenes, descarga, identidad, móvil y revisión. |
+| `README.md` | Uso, formatos admitidos, ubicación de futuros JSON/recursos, versiones y respaldo. |
+| `VERIFICACION.md` | Este informe. |
+
+### Migración y conservación
+
+Se añadieron `candidates`, `candidate_attempts` y `exam_resources`, sin alterar columnas ni registros de intentos/respuestas SQL existentes. Las sesiones SQL antiguas se vinculan a una identidad al recuperar su token original. Antes de modificar estructuras se guardó automáticamente el respaldo local:
+
+`instance/backups/pre-excel-20261021T002339Z-4bfd05db.sqlite3`
+
+La fecha del nombre está en UTC. Se compararon con el respaldo todos los registros previos de `evaluations`, `answers`, `questions`, `exam_versions`, `settings` y `events`; permanecieron idénticos tras importar y reiniciar tres veces. La base local tenía 25 preguntas entre SQL v1/v2 y ningún intento registrado; ahora tiene 37 preguntas, con ambas versiones SQL intactas y Excel añadido. Las pruebas temporales verifican además migración con SQL pendiente, en proceso y calificado, conservando respuestas, notas y sesiones, y el esquema anterior a JSON.
+
+### Pruebas realizadas
+
+- **73 pruebas automáticas: correctas**, mediante `.venv/bin/python -m unittest discover -s tests -v`. Incluyen integridad de 12/100/45 y rúbricas, cinco autocorrecciones y siete revisiones manuales, puntajes parciales y límites, respuestas inválidas, XSS, no ejecución, autenticación, CSRF, separación de candidatos/intentos/exámenes, reinicios idempotentes y migraciones con respaldo.
+- Se comprueba la coincidencia exacta del banco Excel y el original privado, la privacidad de respuestas y criterios, las descargas de propiedad ajena, rutas arbitrarias, archivos ausentes o modificados y rechazo de libros con fórmulas/macros incluso si se actualiza la huella. Una versión nueva con un XLSX distinto conserva la descarga original del intento anterior.
+- **Prueba de navegador Chromium: correcta**, usando únicamente una base temporal y un puerto efímero de pruebas. Recorre SQL 13/100/50 y Excel 12/100/45 con la misma identidad, califica ambos sobre 100, consulta el historial conjunto y descarga el XLSX verificando SHA-256. También comprueba CSV, recuperación tras desconexión/recarga, entrega por vencimiento, navegación, instrucciones y tablas en móvil de 390 px sin desbordamiento. Cero errores JavaScript y cero solicitudes externas de la aplicación.
+- En este entorno Linux fue necesario descargar Chromium y extraer las bibliotecas compartidas necesarias en `/tmp` para ejecutar la comprobación visual; no se agregaron dependencias de operación ni se modificó el sistema. La aplicación sigue funcionando sin internet y se inicia en Windows con el mismo `iniciar.bat`.
+- Validación del lote mediante `importar_evaluaciones.py --validar` y revisión de espacios con `git diff --check` (excluyendo el cambio previo ajeno en `iniciar.bat`).
+
+Capturas de prueba: `artifacts/selector-evaluaciones.png`, `artifacts/excel-movil.png` y `artifacts/candidato-sql-excel.png`. Registros: `artifacts/pruebas-excel.txt` y `artifacts/navegador-excel.txt`. Todos los candidatos y calificaciones de esas capturas son datos temporales de prueba, no registros reales.
+
+Para usar el cambio, reinicia el proceso existente mediante `iniciar.bat` si aún está ejecutando el código anterior. Conserva el mismo puerto y la carpeta `instance/`. En administración, elige Excel al generar su código; el candidato vuelve a Evaluaciones entre SQL y Excel sin finalizar la sesión.

@@ -1,0 +1,830 @@
+{
+  "schema_version": "1.0",
+  "evaluacion": {
+    "codigo": "EXCEL_JUNIOR",
+    "version": "1.0.0",
+    "titulo": "Evaluación práctica de Excel — Nivel Junior",
+    "descripcion": "Competencias de Excel en un contexto operativo de ventas, reportes y preparación de datos para CRM.",
+    "duracion_minutos": 45,
+    "puntaje_maximo": 100,
+    "idioma": "es-MX",
+    "publicable": true,
+    "instrucciones_candidato": [
+      "Tienes 45 minutos para contestar 12 preguntas.",
+      "Las preguntas 1 a 5 son de opción múltiple. Las preguntas 6 a 12 requieren respuesta escrita.",
+      "Descarga el archivo de trabajo; utiliza sus hojas Ventas, Productos, Clientes y Resumen para resolver los casos.",
+      "Escribe las fórmulas directamente en tus respuestas y explica tus pasos cuando se solicite.",
+      "Se aceptan funciones de Excel en español o inglés y separadores ; o , según la configuración regional, siempre que la lógica sea correcta.",
+      "En la pregunta de macros no es obligatorio ejecutar código ni subir archivos .xlsm; basta con escribir VBA o pseudocódigo razonado.",
+      "No modifiques el archivo original de datos; trabaja con una copia si lo necesitas."
+    ],
+    "politica_calificacion": {
+      "preguntas_automaticas": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "preguntas_manuales": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "mostrar_respuestas_correctas_al_candidato": false,
+      "mostrar_rubricas_al_candidato": false,
+      "calificacion_parcial_permitida": true
+    }
+  },
+  "recursos": [
+    {
+      "id": "dataset_excel_junior_v1",
+      "archivo": "plantilla_excel_junior.xlsx",
+      "nombre": "Archivo de práctica de Excel",
+      "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "descargable_por_candidato": true,
+      "observaciones": "La hoja se entrega sin fórmulas resueltas, macros ni claves. La aplicación deberá usar copia de recurso congelada por versión.",
+      "sha256": "217dcb714865ad50486405794ebe41bd46b7e9fb5d3e4ea6d7be7e57c3fb3545"
+    }
+  ],
+  "datos_apoyo": {
+    "hojas": {
+      "Ventas": {
+        "rango": "A1:K13",
+        "columnas": [
+          "Folio",
+          "Fecha",
+          "Ejecutivo",
+          "ProductoID",
+          "Cantidad",
+          "PrecioUnitario",
+          "Importe",
+          "EstadoPago",
+          "Mes",
+          "Clasificación",
+          "ProductoNombre"
+        ],
+        "filas": [
+          [
+            "V-001",
+            "2026-10-01",
+            "Ana",
+            "P-001",
+            2,
+            450,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-002",
+            "2026-10-01",
+            "Luis",
+            "P-003",
+            1,
+            1200,
+            null,
+            "Pendiente",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-003",
+            "2026-10-02",
+            "Carla",
+            "P-002",
+            3,
+            350,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-004",
+            "2026-10-03",
+            "Ana",
+            "P-004",
+            1,
+            800,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-005",
+            "2026-10-04",
+            "Luis",
+            "P-001",
+            2,
+            450,
+            null,
+            "Cancelado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-006",
+            "2026-10-05",
+            "Carla",
+            "P-006",
+            5,
+            110,
+            null,
+            "Pendiente",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-007",
+            "2026-10-06",
+            "Ana",
+            "P-005",
+            4,
+            200,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-008",
+            "2026-10-07",
+            "Luis",
+            "P-002",
+            2,
+            350,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-009",
+            "2026-10-08",
+            "Carla",
+            "P-003",
+            1,
+            1200,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-010",
+            "2026-10-09",
+            "Ana",
+            "P-006",
+            3,
+            110,
+            null,
+            "Pendiente",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-011",
+            "2026-10-10",
+            "Luis",
+            "P-004",
+            2,
+            800,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ],
+          [
+            "V-012",
+            "2026-10-11",
+            "Carla",
+            "P-005",
+            1,
+            200,
+            null,
+            "Pagado",
+            "Octubre",
+            null,
+            null
+          ]
+        ],
+        "columnas_por_calcular": [
+          "G",
+          "J",
+          "K"
+        ]
+      },
+      "Productos": {
+        "rango": "A1:D7",
+        "columnas": [
+          "ProductoID",
+          "Producto",
+          "Categoria",
+          "PrecioLista"
+        ],
+        "filas": [
+          [
+            "P-001",
+            "Mouse inalámbrico",
+            "Accesorios",
+            450
+          ],
+          [
+            "P-002",
+            "Teclado",
+            "Accesorios",
+            350
+          ],
+          [
+            "P-003",
+            "Monitor",
+            "Pantallas",
+            1200
+          ],
+          [
+            "P-004",
+            "Impresora",
+            "Oficina",
+            800
+          ],
+          [
+            "P-005",
+            "Memoria USB",
+            "Almacenamiento",
+            200
+          ],
+          [
+            "P-006",
+            "Cable HDMI",
+            "Accesorios",
+            110
+          ]
+        ]
+      },
+      "Clientes": {
+        "rango": "A1:E11",
+        "columnas": [
+          "IDCliente",
+          "Nombre",
+          "Correo",
+          "Telefono",
+          "Ciudad"
+        ],
+        "filas": [
+          [
+            "C001",
+            "  María López  ",
+            "maria.lopez@correo.com",
+            "5512345678",
+            "CDMX"
+          ],
+          [
+            "C002",
+            "José Pérez",
+            "jose.perez@correo.com",
+            "5512345679",
+            "Puebla"
+          ],
+          [
+            "C003",
+            "MARÍA LÓPEZ",
+            "MARIA.LOPEZ@CORREO.COM",
+            "5512345678",
+            "CDMX"
+          ],
+          [
+            "C004",
+            "Ana Ruiz",
+            "ana.ruizcorreo.com",
+            "5512345680",
+            "Toluca"
+          ],
+          [
+            "C005",
+            "Carlos Díaz",
+            "carlos.diaz@correo.com",
+            "55123456",
+            "Querétaro"
+          ],
+          [
+            "C006",
+            "Raúl Ochoa",
+            "raul.ochoa@correo.com",
+            "5512345681",
+            "CDMX"
+          ],
+          [
+            "C007",
+            "Luisa Romero",
+            "  luisa.romero@correo.com  ",
+            "5512345682",
+            "Pachuca"
+          ],
+          [
+            "C008",
+            "Marcos Lara",
+            "",
+            "5512345683",
+            "Puebla"
+          ],
+          [
+            "C009",
+            "Eva Torres",
+            "eva.torres@correo.com",
+            "5512345684",
+            "Puebla"
+          ],
+          [
+            "C010",
+            "Fernanda Solís",
+            "fernanda.solis@correo.com",
+            "",
+            "CDMX"
+          ]
+        ]
+      },
+      "Resumen": {
+        "rango": "A1:B4",
+        "columnas": [
+          "Concepto",
+          "Resultado"
+        ],
+        "filas": [
+          [
+            "Total cobrado",
+            null
+          ],
+          [
+            "Operaciones pagadas",
+            null
+          ],
+          [
+            "Observaciones",
+            null
+          ]
+        ]
+      }
+    },
+    "aclaracion": "Datos totalmente ficticios; las celdas Importe, Clasificación y ProductoNombre de Ventas están vacías a propósito."
+  },
+  "preguntas": [
+    {
+      "id": "EXCEL-JR-V1-P01",
+      "numero": 1,
+      "tipo": "opcion_multiple",
+      "tema": "Fórmulas básicas",
+      "puntaje": 4,
+      "enunciado": "¿Qué fórmula suma correctamente los números de las celdas A2 a A10?",
+      "opciones": [
+        {
+          "id": "A",
+          "texto": "SUMA(A2:A10)"
+        },
+        {
+          "id": "B",
+          "texto": "=SUMA(A2:A10)"
+        },
+        {
+          "id": "C",
+          "texto": "=TOTAL(A2:A10)"
+        },
+        {
+          "id": "D",
+          "texto": "=A2:A10"
+        }
+      ],
+      "correccion": {
+        "modo": "automatica",
+        "respuesta_correcta": "B",
+        "justificacion_admin": "Las fórmulas comienzan por = y SUMA permite sumar rangos."
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P02",
+      "numero": 2,
+      "tipo": "opcion_multiple",
+      "tema": "Referencias absolutas",
+      "puntaje": 4,
+      "enunciado": "Quieres copiar una fórmula sin que cambie la referencia a la celda B1. ¿Cuál debes utilizar?",
+      "opciones": [
+        {
+          "id": "A",
+          "texto": "B1"
+        },
+        {
+          "id": "B",
+          "texto": "B$1"
+        },
+        {
+          "id": "C",
+          "texto": "$B1"
+        },
+        {
+          "id": "D",
+          "texto": "$B$1"
+        }
+      ],
+      "correccion": {
+        "modo": "automatica",
+        "respuesta_correcta": "D",
+        "justificacion_admin": "$B$1 fija columna y fila."
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P03",
+      "numero": 3,
+      "tipo": "opcion_multiple",
+      "tema": "Filtros",
+      "puntaje": 4,
+      "enunciado": "Tienes una tabla y quieres mostrar únicamente las filas cuyo EstadoPago sea «Pagado» sin borrar las demás. ¿Qué herramienta usarías?",
+      "opciones": [
+        {
+          "id": "A",
+          "texto": "Datos > Filtro"
+        },
+        {
+          "id": "B",
+          "texto": "Reemplazar todo"
+        },
+        {
+          "id": "C",
+          "texto": "Combinar celdas"
+        },
+        {
+          "id": "D",
+          "texto": "Eliminar duplicados"
+        }
+      ],
+      "correccion": {
+        "modo": "automatica",
+        "respuesta_correcta": "A",
+        "justificacion_admin": "Filtrar permite ocultar temporalmente las filas que no cumplen el criterio."
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P04",
+      "numero": 4,
+      "tipo": "opcion_multiple",
+      "tema": "CONTAR.SI",
+      "puntaje": 4,
+      "enunciado": "Si EstadoPago está en H2:H13, ¿qué fórmula cuenta las celdas que contienen exactamente «Pagado»?",
+      "opciones": [
+        {
+          "id": "A",
+          "texto": "=CONTAR(H2:H13;\"Pagado\")"
+        },
+        {
+          "id": "B",
+          "texto": "=SUMA(H2:H13;\"Pagado\")"
+        },
+        {
+          "id": "C",
+          "texto": "=CONTAR.SI(H2:H13;\"Pagado\")"
+        },
+        {
+          "id": "D",
+          "texto": "=PROMEDIO.SI(H2:H13;\"Pagado\")"
+        }
+      ],
+      "correccion": {
+        "modo": "automatica",
+        "respuesta_correcta": "C",
+        "justificacion_admin": "CONTAR.SI cuenta coincidencias con un criterio."
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P05",
+      "numero": 5,
+      "tipo": "opcion_multiple",
+      "tema": "Macros y seguridad",
+      "puntaje": 4,
+      "enunciado": "¿Cuál afirmación describe mejor a los archivos y macros de Excel?",
+      "opciones": [
+        {
+          "id": "A",
+          "texto": "Un archivo .xlsm puede contener macros VBA; solo deben habilitarse macros confiables."
+        },
+        {
+          "id": "B",
+          "texto": "Un archivo .xlsx siempre conserva macros VBA al guardarse."
+        },
+        {
+          "id": "C",
+          "texto": "Las macros siempre son seguras si el archivo llegó por correo."
+        },
+        {
+          "id": "D",
+          "texto": "Una macro es únicamente un formato visual, no puede automatizar tareas."
+        }
+      ],
+      "correccion": {
+        "modo": "automatica",
+        "respuesta_correcta": "A",
+        "justificacion_admin": "El formato habilitado para macros es .xlsm; no deben activarse macros desconocidas."
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P06",
+      "numero": 6,
+      "tipo": "respuesta_abierta",
+      "tema": "Operaciones básicas",
+      "puntaje": 10,
+      "enunciado": "En la hoja «Ventas», escribe la fórmula que debe colocarse en G2 (columna Importe) para calcular Cantidad × PrecioUnitario. Explica cómo aplicarla hasta G13.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "En G2: =E2*F2. Luego copiar o arrastrar el controlador de relleno hasta G13. En V-001 da 900.",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Fórmula válida en G2",
+              "puntos": 6,
+              "descripcion": "Multiplica correctamente E2 por F2, con referencias relativas."
+            },
+            {
+              "criterio": "Aplicación a las demás filas",
+              "puntos": 4,
+              "descripcion": "Describe copiar/arrastrar hasta G13 sin valores fijos."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Ventas",
+        "rango": "D1:G13",
+        "origen": "datos_apoyo.hojas"
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P07",
+      "numero": 7,
+      "tipo": "respuesta_abierta",
+      "tema": "Función SI",
+      "puntaje": 10,
+      "enunciado": "En «Ventas», escribe la fórmula para J2 (Clasificación): si H2 es «Pagado» debe aparecer «Cobrado»; en cualquier otro caso, «No cobrado». Explica cómo copiarla hasta J13.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "En J2: =SI(H2=\"Pagado\";\"Cobrado\";\"No cobrado\") o =IF(H2=\"Pagado\",\"Cobrado\",\"No cobrado\"). Copiar hasta J13.",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Condición y sintaxis de SI",
+              "puntos": 6,
+              "descripcion": "Distingue exactamente Pagado y devuelve Cobrado."
+            },
+            {
+              "criterio": "Valor alternativo",
+              "puntos": 2,
+              "descripcion": "Devuelve No cobrado en los demás casos."
+            },
+            {
+              "criterio": "Copiado correcto",
+              "puntos": 2,
+              "descripcion": "Indica cómo replicar hasta J13."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Ventas",
+        "rango": "H1:J13",
+        "origen": "datos_apoyo.hojas"
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P08",
+      "numero": 8,
+      "tipo": "respuesta_abierta",
+      "tema": "SUMAR.SI",
+      "puntaje": 10,
+      "enunciado": "Tras llenar Importe (G2:G13), escribe una fórmula en «Resumen»!B2 que sume solamente el Importe de las ventas cuyo EstadoPago sea «Pagado». Incluye el resultado numérico esperado.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "En Resumen!B2: =SUMAR.SI(Ventas!H2:H13;\"Pagado\";Ventas!G2:G13). También se acepta SUMAR.SI.CONJUNTO equivalente o SUMIF en inglés. Resultado: $7,250.",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Rangos y función",
+              "puntos": 6,
+              "descripcion": "Usa SUMAR.SI/SUMAR.SI.CONJUNTO/SUMIF equivalente con rango de sumas G2:G13."
+            },
+            {
+              "criterio": "Condición",
+              "puntos": 2,
+              "descripcion": "Filtra únicamente EstadoPago igual a Pagado."
+            },
+            {
+              "criterio": "Resultado correcto",
+              "puntos": 2,
+              "descripcion": "Obtiene 7250 con el dataset proporcionado."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Ventas",
+        "rango": "C1:H13",
+        "origen": "datos_apoyo.hojas"
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P09",
+      "numero": 9,
+      "tipo": "respuesta_abierta",
+      "tema": "Búsqueda de datos",
+      "puntaje": 10,
+      "enunciado": "En «Ventas», escribe una fórmula en K2 que busque ProductoID (D2) en «Productos» y devuelva su nombre. La búsqueda debe ser exacta y permitir copiar hacia abajo hasta K13.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "En K2: =BUSCARV(D2;Productos!$A$2:$D$7;2;FALSO). Alternativa: =BUSCARX(D2;Productos!$A$2:$A$7;Productos!$B$2:$B$7). Para P-001 devuelve «Mouse inalámbrico».",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Búsqueda funcional",
+              "puntos": 4,
+              "descripcion": "Obtiene la descripción del ProductoID desde Productos."
+            },
+            {
+              "criterio": "Rango fijo al copiar",
+              "puntos": 3,
+              "descripcion": "Usa $ en el rango adecuado o referencias estructuradas estables."
+            },
+            {
+              "criterio": "Coincidencia exacta",
+              "puntos": 3,
+              "descripcion": "Usa FALSO/0 en BUSCARV o búsqueda exacta equivalente."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Productos",
+        "rango": "A1:D7",
+        "origen": "datos_apoyo.hojas"
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P10",
+      "numero": 10,
+      "tipo": "respuesta_abierta",
+      "tema": "Limpieza y calidad de datos",
+      "puntaje": 15,
+      "enunciado": "Revisa la hoja «Clientes» y detecta al menos CUATRO problemas de calidad de datos (indica los IDCliente involucrados cuando puedas). Describe cómo los corregirías en Excel y cómo validarías la información antes de importarla a un CRM. No elimines información sin verificar.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "Hallazgos posibles: C001/C003 probable duplicado al normalizar nombre y correo; C001 nombre con espacios; C004 correo sin @; C005 teléfono con 8 dígitos; C007 correo con espacios; C008 correo vacío; C010 teléfono vacío. Limpiar mediante ESPACIOS, normalización de mayúsculas, validación de correo/teléfono, formato texto para números, identificación de duplicados, revisión manual y respaldo.",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Detección de anomalías",
+              "puntos": 6,
+              "descripcion": "Identifica al menos cuatro anomalías reales con ID o ejemplos concretos."
+            },
+            {
+              "criterio": "Método de limpieza y validación",
+              "puntos": 5,
+              "descripcion": "Propone pasos concretos en Excel y criterios de verificación antes de importar."
+            },
+            {
+              "criterio": "Integridad y prevención de pérdida",
+              "puntos": 4,
+              "descripcion": "Conserva copia del original, revisa duplicados antes de fusionar y no inventa valores faltantes."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Clientes",
+        "rango": "A1:E11",
+        "origen": "datos_apoyo.hojas"
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P11",
+      "numero": 11,
+      "tipo": "respuesta_abierta",
+      "tema": "Tabla dinámica y reportes",
+      "puntaje": 15,
+      "enunciado": "Usando «Ventas» después de calcular Importe, explica cómo crear una tabla dinámica que muestre la suma de Importe por Ejecutivo considerando ÚNICAMENTE ventas con EstadoPago «Pagado». Indica qué campo iría en Filas, Valores y Filtros, y escribe el total de cada ejecutivo.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "Configuración: Filas=Ejecutivo, Valores=Suma de Importe, Filtros=EstadoPago filtrando Pagado. Totales: Ana $2,500; Luis $2,300; Carla $2,450; total general $7,250.",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Configuración de tabla dinámica",
+              "puntos": 6,
+              "descripcion": "Filas=Ejecutivo, Valores=Suma de Importe, Filtro=EstadoPago Pagado."
+            },
+            {
+              "criterio": "Totales individuales",
+              "puntos": 6,
+              "descripcion": "Ana=2500, Luis=2300, Carla=2450; 2 puntos por ejecutivo."
+            },
+            {
+              "criterio": "Total y coherencia",
+              "puntos": 3,
+              "descripcion": "Total general=7250 y excluye Pendiente y Cancelado."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Ventas",
+        "rango": "A1:K13",
+        "origen": "datos_apoyo.hojas"
+      }
+    },
+    {
+      "id": "EXCEL-JR-V1-P12",
+      "numero": 12,
+      "tipo": "respuesta_abierta",
+      "tema": "Introducción a macros VBA",
+      "puntaje": 10,
+      "enunciado": "Escribe una macro VBA sencilla llamada FormatearVentas que, sobre la hoja «Ventas», ponga en negritas los encabezados de la fila 1 y ajuste automáticamente el ancho de las columnas A:K. Si no conoces la sintaxis exacta, escribe pseudocódigo y explica qué haría. Agrega una precaución antes de ejecutar macros desconocidas.",
+      "correccion": {
+        "modo": "manual",
+        "respuesta_referencia": "Ejemplo:\nSub FormatearVentas()\n    With ThisWorkbook.Worksheets(\"Ventas\")\n        .Rows(1).Font.Bold = True\n        .Columns(\"A:K\").AutoFit\n    End With\nEnd Sub\nPrecaución: habilitar solo macros confiables, revisar código/origen; para guardar macros usar .xlsm. Con pseudocódigo correcto se asigna crédito parcial.",
+        "rubrica": {
+          "criterios": [
+            {
+              "criterio": "Estructura macro",
+              "puntos": 3,
+              "descripcion": "Usa Sub/End Sub con nombre correcto; si es pseudocódigo, crédito parcial razonable."
+            },
+            {
+              "criterio": "Selecciona la hoja Ventas",
+              "puntos": 2,
+              "descripcion": "Opera de forma explícita en Ventas, no en cualquier hoja activa."
+            },
+            {
+              "criterio": "Encabezados en negritas",
+              "puntos": 2,
+              "descripcion": "Aplica .Rows(1).Font.Bold=True o equivalente."
+            },
+            {
+              "criterio": "Ajuste de ancho",
+              "puntos": 2,
+              "descripcion": "Aplica .Columns('A:K').AutoFit o equivalente."
+            },
+            {
+              "criterio": "Seguridad básica",
+              "puntos": 1,
+              "descripcion": "Indica no habilitar macros de origen desconocido."
+            }
+          ]
+        }
+      },
+      "configuracion_respuesta": {
+        "multilinea": true,
+        "permite_codigo": true
+      },
+      "contexto_tabla": {
+        "hoja": "Ventas",
+        "rango": "A1:K1",
+        "origen": "datos_apoyo.hojas"
+      }
+    }
+  ]
+}

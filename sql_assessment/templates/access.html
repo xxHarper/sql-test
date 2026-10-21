@@ -5,17 +5,18 @@
 <a class="back-link" href="{{ url_for('candidate.welcome') }}">← Volver al inicio</a>
 <div class="card auth-card">
 <span class="eyebrow">PORTAL DEL CANDIDATO</span>
-<h1>Tu siguiente paso.</h1>
+<h1>{{ selected_exam.label if selected_exam else "Tu siguiente paso." }}</h1>
 <p class="muted">Ingresa tus datos para consultar las instrucciones. El tiempo aún no comienza.</p>
 <form method="post" class="stack" action="{{ url_for('candidate.access') }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+{% if selected_exam %}<input type="hidden" name="exam_id" value="{{ selected_exam.exam_id }}">{% endif %}
 <div>
 <label for="name">Nombre completo</label>
-<input id="name" name="name" autocomplete="name" placeholder="Tal como quieres que te identifiquemos" minlength="3" maxlength="120" value="{{ request.form.get('name','') }}" required autofocus>
+<input id="name" name="name" autocomplete="name" placeholder="Tal como quieres que te identifiquemos" minlength="3" maxlength="120" value="{{ identity.name if identity else request.form.get('name','') }}" {% if identity %}readonly{% endif %} required autofocus>
 </div>
 <div>
 <label for="code">Código de evaluación</label>
-<input id="code" name="code" class="code-input" placeholder="SQL-XXXXXXXX" maxlength="12" autocomplete="off" spellcheck="false" value="{{ request.form.get('code','') }}" required>
+<input id="code" name="code" class="code-input" placeholder="SQL-XXXXXXXX / EXC-XXXXXXXX" maxlength="12" autocomplete="off" spellcheck="false" value="{{ request.form.get('code','') }}" required>
 <p class="micro">El código es personal y solo puede utilizarse una vez.</p>
 </div>
 <button class="button primary full" type="submit">Ver instrucciones <span>→</span>

@@ -7,7 +7,7 @@
 <h1>Evaluaciones</h1>
 <p class="muted">Una vista clara del avance de tus candidatos.</p>
 </div>
-<a class="button secondary" href="{{ url_for('admin.export') }}">↓ Exportar CSV</a>
+<a class="button secondary" href="{{ url_for('admin.export',examen=selected_exam,estado=selected_status,q=query) }}">↓ Exportar CSV</a>
 </div>
 <div class="metrics four">
 <div class="card">
@@ -50,6 +50,7 @@
 <h2>Candidatos e historial <span class="badge">{{ evaluations|length }}</span>
 </h2>
 <form method="get" class="filters">
+<label class="sr-only" for="exam-filter">Evaluación</label><select id="exam-filter" name="examen"><option value="">Todas las evaluaciones</option>{% for choice in exam_choices %}<option value="{{ choice.exam_id }}" {% if selected_exam==choice.exam_id %}selected{% endif %}>{{ choice.title }} · {{ choice.exam_id }}</option>{% endfor %}</select>
 <label class="sr-only" for="search">Buscar candidato o código</label>
 <input id="search" type="search" name="q" value="{{ query }}" placeholder="Buscar nombre o código…">
 <label class="sr-only" for="status">Estado</label>
@@ -74,7 +75,7 @@
 </thead>
 <tbody>{% for e in evaluations %}<tr>
 <td>
-<strong>{{ e.name or 'Sin asignar' }}</strong>
+<strong>{{ e.name or 'Sin asignar' }}</strong>{% if e.candidate_id %}<div><a class="micro" href="{{ url_for('admin.candidate_detail',candidate_id=e.candidate_id) }}">Ver evaluaciones del candidato →</a></div>{% endif %}
 <div class="micro">{{ e.exam_title }} · {{ e.exam_id }} · revisión {{ e.version }}</div>
 <div class="code-row">
 <code>{{ e.code }}</code>{% if not e.candidate_token %}<button class="copy-button" type="button" data-copy="{{ e.code }}" aria-label="Copiar código {{ e.code }}">Copiar</button>{% endif %}</div>

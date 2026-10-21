@@ -5,6 +5,7 @@ Requires playwright and its Chromium browser, not needed by the application.
 Uses a temporary database and a randomly generated test password.
 """
 import secrets
+import hashlib
 import json
 import sys
 import tempfile
@@ -32,7 +33,9 @@ def main():
         app = create_app({'DATABASE':str(Path(directory) / 'browser.sqlite3'), 'NOW': lambda: clock[0]})
         with app.app_context():
             active = active_versions()
-            assert len(active) == 1 and active[0]['exam_id'] == 'sql-migracion-junior-v2'
+            assert len(active) == 2 and active[0]['exam_id'] == 'sql-migracion-junior-v2'
+            excel_version = active[1]['id']
+            excel_document = json.loads(active[1]['source_json'])
             document = json.loads(active[0]['source_json'])
             questions = [dict(id=i, points=q['points'], kind=q['type'], correct=q['grading'].get('correct_option')) for i,q in enumerate(document['questions'],1)]
             assert len(questions) == 13 and document['duration_minutes'] == 50
@@ -143,6 +146,61 @@ def main():
                 download.save_as(str(screenshots / 'resultados-prueba.csv'))
                 assert 'Candidata de prueba' in Path(download.path()).read_text(encoding='utf-8-sig')
                 admin.screenshot(path=str(screenshots / 'calificacion.png'), full_page=True)
+                # The same authenticated candidate now selects and completes Excel.
+                admin.goto(url + '/admin')
+                admin.locator('#version-id').select_option(str(excel_version))
+                admin.locator('#count').fill('1')
+                admin.get_by_role('button', name='Crear códigos').click()
+                excel_code = admin.locator('.code-row code').first.inner_text()
+                assert excel_code.startswith('EXC-')
+                candidate.get_by_role('link', name='Volver a Evaluaciones').click()
+                expect(candidate.get_by_role('heading', name='SQL Junior',exact=True)).to_be_visible()
+                expect(candidate.get_by_role('heading', name='Excel Junior',exact=True)).to_be_visible()
+                candidate.screenshot(path=str(screenshots / 'selector-evaluaciones.png'),full_page=True)
+                candidate.get_by_role('link', name='Elegir Excel Junior').click()
+                expect(candidate.locator('#name')).to_have_value('Candidata de prueba')
+                expect(candidate.locator('#name')).to_have_attribute('readonly','')
+                candidate.get_by_label('Código de evaluación').fill(excel_code)
+                candidate.get_by_role('button', name='Ver instrucciones').click()
+                with candidate.expect_download() as info:
+                    candidate.get_by_role('link',name='Descargar archivo de práctica').click()
+                workbook = Path(info.value.path()).read_bytes()
+                assert hashlib.sha256(workbook).hexdigest() == excel_document['resources'][0]['sha256']
+                candidate.get_by_role('button', name='Comenzar evaluación').click()
+                expect(candidate.locator('#save-status')).to_contain_text('Todos los cambios guardados')
+                expect(candidate.locator('.question-card')).to_have_count(12)
+                expect(candidate.locator('#timer')).to_contain_text('44:')
+                candidate.locator('.practice-resources summary').click()
+                expect(candidate.locator('.practice-resources')).to_contain_text('C010')
+                assert candidate.evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Excel mobile overflow'
+                candidate.locator('.practice-resources summary').click()
+                candidate.locator('[data-go="5"]').click()
+                candidate.screenshot(path=str(screenshots / 'excel-movil.png'),full_page=True)
+                for i,q in enumerate(excel_document['questions'],1):
+                    candidate.locator(f'[data-go="{i-1}"]').click()
+                    if q['type']=='multiple_choice':
+                        candidate.locator(f'input[data-answer="{i}"][value="{q["grading"]["correct_option"]}"]').check()
+                    else:
+                        candidate.locator(f'#answer-{i}').fill('=E2*F2; copiar hasta G13' if i==6 else 'Explicación o pseudocódigo para revisión manual.')
+                    expect(candidate.locator('#save-status')).to_contain_text('Todos los cambios guardados')
+                candidate.get_by_role('button',name='Entregar evaluación',exact=True).click()
+                expect(candidate.locator('#answered-count')).to_have_text('12')
+                candidate.get_by_role('button',name='Confirmar entrega').click()
+                expect(candidate.get_by_role('heading',name='Gracias, Candidata de prueba.')).to_be_visible()
+                admin.reload()
+                row = admin.locator('tr',has=admin.locator('code',has_text=excel_code))
+                row.get_by_role('link',name='Revisar',exact=False).click()
+                expect(admin.locator('.grading-question')).to_have_count(12)
+                for i,q in enumerate(excel_document['questions'],1):
+                    if q['type']!='multiple_choice':
+                        admin.locator(f'#score-{i}').fill(str(q['points']))
+                admin.get_by_role('button',name='Finalizar calificación').click()
+                expect(admin.locator('.score-summary')).to_contain_text('100')
+                admin.get_by_role('link',name='Ver evaluaciones del candidato').click()
+                expect(admin.locator('tbody tr')).to_have_count(2)
+                expect(admin.locator('tbody')).to_contain_text('EXCEL_JUNIOR')
+                expect(admin.locator('tbody')).to_contain_text('sql-migracion-junior-v2')
+                admin.screenshot(path=str(screenshots / 'candidato-sql-excel.png'),full_page=True)
                 # Verify expiration in the browser without waiting 50 real minutes.
                 timeout_context = browser.new_context(viewport={'width':390,'height':844})
                 timeout_page = timeout_context.new_page()
@@ -158,7 +216,7 @@ def main():
                 assert not errors, errors
                 assert not external, external
                 browser.close()
-                print('OK: examen activo sql-migracion-junior-v2, 13 preguntas, 50 minutos, Q13 con editor SQL y rúbrica privada, entrega y calificación 100/100, CSV, recuperación y vencimiento. Sin errores JavaScript ni peticiones externas.')
+                print('OK: SQL 13/100/50 y Excel 12/100/45 en una app; mismo candidato, selector, descarga SHA-256, tablas de apoyo, móvil, calificaciones 100/100, historial por candidato, CSV, recuperación y vencimiento. Sin errores JavaScript ni peticiones externas.')
         finally:
             stop.set()
             worker.join(3)

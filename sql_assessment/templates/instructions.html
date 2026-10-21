@@ -23,21 +23,23 @@
 </div>
 </div>
 <section class="card instructions">
-<h2>{{ exam.title }}</h2>
+<h2>{{ exam.title }}</h2>{% if exam.publication_version %}<p class="micro">Versión {{ exam.publication_version }}</p>{% endif %}
 <p class="muted">{{ exam.description }}</p>
 <ol>{% for instruction in exam.instructions %}<li>{{ instruction }}</li>{% endfor %}</ol>
 <h3>Uso de la plataforma</h3>
 <ol>
-<li>Responde las preguntas de opción múltiple y escribe tus consultas SQL y respuestas abiertas.</li>
+<li>Responde las preguntas de opción múltiple y {% if exam.resources %}escribe tus fórmulas, explicaciones o pseudocódigo.{% else %}escribe tus consultas SQL y respuestas abiertas.{% endif %}</li>
 <li>Puedes ir a cualquier pregunta y revisar tus respuestas antes de entregar.</li>
 <li>Las respuestas se guardan automáticamente mientras exista conexión con el servidor local. Verifica el indicador de guardado.</li>
 <li>Al recargar, tu evaluación continúa en este navegador. El reloj sigue corriendo aunque cierres la página.</li>
 <li>Al llegar a cero, el servidor entrega las respuestas que alcanzaron a guardarse.</li>
 <li>La entrega es definitiva. Tus resultados serán revisados por el equipo evaluador.</li>
 </ol>
-<div class="notice info">No necesitas ejecutar las consultas. Escribe el SQL que usarías; será revisado manualmente.</div>
+<div class="notice info">{% if exam.resources %}Las fórmulas y el VBA se revisan como texto. Se aceptan funciones equivalentes en español o inglés y separadores ; o ,. No se ejecuta código.{% else %}No necesitas ejecutar las consultas. Escribe el SQL que usarías; será revisado manualmente.{% endif %}</div>
 </section>
+{% include '_resources.html' %}
 <form method="post" action="{{ url_for('candidate.start') }}" class="start-row">
+<input type="hidden" name="evaluation_id" value="{{ evaluation.id }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <span class="micro">El temporizador comienza al presionar el botón.</span>
 <button class="button primary large" type="submit">Comenzar evaluación <span>→</span>

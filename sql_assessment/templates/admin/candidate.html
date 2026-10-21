@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Candidato · SQL Assessment{% endblock %}
+{% block content %}<main id="main" class="container page">
+<a class="back-link" href="{{ url_for('admin.dashboard') }}">← Todas las evaluaciones</a>
+<div class="eyebrow">HISTORIAL POR CANDIDATO · {{ candidate.id }}</div><h1>{{ candidate.name }}</h1>
+<p class="muted">Intentos vinculados a la misma identidad de navegador. Los nombres iguales no se fusionan automáticamente.</p>
+<section class="card results-card"><div class="table-scroll"><table class="results-table"><thead><tr><th>Evaluación / versión</th><th>Estado</th><th>Tiempo utilizado</th><th>Resultado / corrección</th><th>Respuestas</th></tr></thead><tbody>
+{% for e in evaluations %}<tr><td><strong>{{ e.exam_title }}</strong><div class="micro">{{ e.exam_id }} · revisión {{ e.version }} · {{ e.code }}</div></td>
+<td>{{ status_labels[e.status] }}</td><td>{% if e.started_at is not none %}{{ ([((e.submitted_at or current_time)-e.started_at),(e.deadline-e.started_at)]|min)|elapsed }}{% else %}—{% endif %}</td>
+<td>{% if e.status=='graded' %}<strong>{{ '%g'|format(e.total) }} / 100</strong><div class="micro">{{ classification(e.total) }}</div>{% elif e.status in ['submitted','expired'] %}{{ e.reviewed }}/{{ e.manual_count }} revisadas · {{ '%g'|format(e.total) }} puntos parciales{% else %}—{% endif %}</td>
+<td><a class="button small ghost" href="{{ url_for('admin.detail',evaluation_id=e.id) }}">Ver respuestas →</a></td></tr>{% endfor %}
+</tbody></table></div></section></main>{% endblock %}

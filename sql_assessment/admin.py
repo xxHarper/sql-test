@@ -56,11 +56,21 @@ def result_rows():
     return get_db().execute('''SELECT e.*, COALESCE(SUM(a.score),0) AS total,
         COUNT(CASE WHEN q.kind<>'choice' AND a.score IS NOT NULL THEN 1 END) AS reviewed,
         (SELECT COUNT(*) FROM questions WHERE version_id=e.version_id AND kind<>'choice') AS manual_count,
-        v.title AS exam_title,v.exam_id,v.version,
+        v.title AS exam_title,v.exam_id,v.version,ca.candidate_id,
         COALESCE(SUM(CASE WHEN a.answer<>'' THEN 1 ELSE 0 END),0) AS answered
         FROM evaluations e JOIN exam_versions v ON v.id=e.version_id
+        LEFT JOIN candidate_attempts ca ON ca.evaluation_id=e.id
         LEFT JOIN answers a ON a.evaluation_id=e.id LEFT JOIN questions q ON q.id=a.question_id
         GROUP BY e.id ORDER BY e.created_at DESC,e.id DESC''').fetchall()
+
+
+def filter_results(evaluations):
+    exam_id = request.args.get('examen', '')
+    status = request.args.get('estado', '')
+    query = request.args.get('q', '').strip()[:120]
+    return [e for e in evaluations if (not exam_id or e['exam_id'] == exam_id) and
+            (not status or e['status'] == status) and
+            (not query or query.casefold() in ((e['name'] or '') + ' ' + e['code']).casefold())]
 
 
 @bp.get('')
@@ -70,10 +80,12 @@ def dashboard():
     evaluations = result_rows()
     status = request.args.get('estado', '')
     query = request.args.get('q', '').strip()[:120]
-    counts = {key: sum(e['status'] == key for e in evaluations) for key in STATUS_LABELS}
-    visible = [e for e in evaluations if (not status or e['status'] == status) and
-               (not query or query.casefold() in ((e['name'] or '') + ' ' + e['code']).casefold())]
-    return render_template('admin/dashboard.html', evaluations=visible, counts=counts, total=len(evaluations),
+    selected_exam = request.args.get('examen', '')
+    scoped = [e for e in evaluations if not selected_exam or e['exam_id'] == selected_exam]
+    counts = {key: sum(e['status'] == key for e in scoped) for key in STATUS_LABELS}
+    exams = get_db().execute('SELECT exam_id,MAX(title) AS title FROM exam_versions GROUP BY exam_id ORDER BY exam_id').fetchall()
+    return render_template('admin/dashboard.html', evaluations=filter_results(evaluations), counts=counts, total=len(scoped),
+                           selected_exam=selected_exam, exam_choices=exams,
                            selected_status=status, query=query, current_time=now(), classification=classification, admin_mode=True, versions=active_versions())
 
 
@@ -92,16 +104,29 @@ def create_codes():
     version_id = request.form.get('version_id', str(versions[0]['id']))
     if version_id not in {str(v['id']) for v in versions}:
         abort(400, 'Selecciona una versión vigente de evaluación.')
+    selected_version = next(v for v in versions if str(v['id']) == version_id)
+    prefix = 'EXC-' if selected_version['exam_id'] == 'EXCEL_JUNIOR' else 'SQL-'
     with db:
         for _ in range(count):
             while True:
-                code = 'SQL-' + ''.join(secrets.choice(alphabet) for _ in range(8))
+                code = prefix + ''.join(secrets.choice(alphabet) for _ in range(8))
                 if not db.execute('SELECT 1 FROM evaluations WHERE code=?', (code,)).fetchone():
                     break
             cursor = db.execute('INSERT INTO evaluations(code,created_at,version_id) VALUES (?,?,?)', (code, now(), int(version_id)))
             event(db, cursor.lastrowid, 'Código de un solo uso creado')
     flash(f'Se generaron {count} códigos de evaluación.', 'success')
     return redirect(url_for('admin.dashboard'))
+
+
+@bp.get('/candidatos/<int:candidate_id>')
+@login_required
+def candidate_detail(candidate_id):
+    candidate = get_db().execute('SELECT id,name FROM candidates WHERE id=?', (candidate_id,)).fetchone()
+    if candidate is None:
+        abort(404)
+    evaluations = [e for e in result_rows() if e['candidate_id'] == candidate_id]
+    return render_template('admin/candidate.html', candidate=candidate, evaluations=evaluations,
+                           classification=classification, current_time=now(), admin_mode=True)
 
 
 @bp.route('/evaluaciones/<int:evaluation_id>', methods=['GET', 'POST'])
@@ -148,8 +173,9 @@ def detail(evaluation_id):
         return redirect(url_for('admin.detail', evaluation_id=evaluation_id))
     total = sum(q['score'] or 0 for q in questions)
     history = db.execute('SELECT * FROM events WHERE evaluation_id=? ORDER BY at DESC,id DESC', (evaluation_id,)).fetchall()
+    candidate = db.execute('SELECT candidate_id FROM candidate_attempts WHERE evaluation_id=?', (evaluation_id,)).fetchone()
     return render_template('admin/detail.html', evaluation=evaluation, questions=questions, total=total,
-                           classification=classification(total), history=history, current_time=now(), admin_mode=True, exam=exam)
+                           classification=classification(total), history=history, current_time=now(), admin_mode=True, exam=exam, candidate=candidate)
 
 
 def csv_safe(value):
@@ -170,7 +196,7 @@ def export():
     writer = csv.writer(output)
     fields = ['ID', 'Código', 'Nombre', 'Estado', 'Creado UTC', 'Inicio UTC', 'Entrega UTC', 'Segundos utilizados', 'Puntaje sobre 100', 'Clasificación', 'Revisión manual']
     fields.extend(['Evaluación', 'exam_id', 'Versión'])
-    evaluations = result_rows()
+    evaluations = filter_results(result_rows())
     max_position = max((len(admin_questions(e['version_id'])) for e in evaluations), default=0)
     for q in range(1, max_position + 1):
         fields.extend([f'P{q} id', f'P{q} respuesta', f'P{q} puntaje', f'P{q} comentario'])

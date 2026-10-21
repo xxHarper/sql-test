@@ -47,13 +47,13 @@ class V2Tests(unittest.TestCase):
 
     def test_default_active_bank_is_v2_with_exact_source(self):
         documents = load_documents(ROOT/'evaluaciones')
-        self.assertEqual([doc['exam_id'] for _,doc in documents],['sql-migracion-junior-v2'])
+        self.assertEqual({doc['exam_id'] for _,doc in documents},{'sql-migracion-junior-v2','EXCEL_JUNIOR'})
         self.assertEqual(len(V2['questions']),13)
         self.assertEqual(len({q['id'] for q in V2['questions']}),13)
         self.assertEqual(sum(q['points'] for q in V2['questions']),100)
         with self.app.app_context():
             active = active_versions()
-            self.assertEqual(len(active),1)
+            self.assertEqual(len(active),2)
             self.assertEqual(json.loads(active[0]['source_json']),V2)
             meta = version_info(active[0]['id'])
             self.assertEqual((meta['question_count'],meta['manual_count'],meta['duration_minutes']),(13,8,50))
@@ -158,7 +158,7 @@ class V2Tests(unittest.TestCase):
         create_app(self.config)
         with self.app.app_context():
             self.assertEqual('\n'.join(get_db().iterdump()),before)
-            self.assertEqual(get_db().execute('SELECT COUNT(*) FROM questions').fetchone()[0],13)
+            self.assertEqual(get_db().execute('SELECT COUNT(*) FROM questions WHERE version_id=?',(evaluation['version_id'],)).fetchone()[0],13)
 
     def test_upgrade_keeps_v1_pending_active_and_graded_attempts(self):
         # Build the previous installation with real v1 data and the same DB file.
@@ -195,7 +195,7 @@ class V2Tests(unittest.TestCase):
             self.assertEqual([tuple(r) for r in db.execute('SELECT * FROM evaluations ORDER BY id')],old_evaluations)
             self.assertEqual([tuple(r) for r in db.execute('SELECT * FROM answers ORDER BY evaluation_id,question_id')],old_answers)
             self.assertEqual([tuple(r) for r in db.execute('SELECT * FROM questions WHERE version_id=? ORDER BY id',(active['version_id'],))],old_questions)
-            self.assertEqual([r['exam_id'] for r in active_versions()],[V2['exam_id']])
+            self.assertEqual([r['exam_id'] for r in active_versions()],[V2['exam_id'],'EXCEL_JUNIOR'])
             self.assertEqual(db.execute('SELECT SUM(score) FROM answers WHERE evaluation_id=?',(complete['id'],)).fetchone()[0],100)
         self.assertEqual(self.state(),state)
         self.assertEqual(len(self.state()['answers']),12)

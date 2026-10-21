@@ -6,6 +6,7 @@
 {% block content %}
 <main id="main" class="exam-layout" data-evaluation="{{ evaluation.id }}">
 <aside class="exam-sidebar">
+<a class="back-link" href="{{ url_for('candidate.welcome') }}">← Evaluaciones</a>
 <div class="eyebrow">TU EVALUACIÓN</div>
 <h2>{{ evaluation.name }}</h2>
 <p class="micro">{{ exam.title }}</p>
@@ -35,6 +36,7 @@
 <small>restantes</small>
 </div>
 </div>
+{% include '_resources.html' %}
 <div id="network-alert" class="notice error" role="alert" hidden>
 </div>
 <div class="exam-content" id="question-area" aria-live="polite">

@@ -74,7 +74,25 @@ def validate_document(document, source='<JSON>'):
             return []
         return value
 
-    root = obj(document, '$', ('schema_version', 'exam_id', 'title', 'description', 'duration_minutes', 'max_score', 'instructions', 'sections', 'questions'), ('internal_notes',))
+    def validate_tables(values, path):
+        for j, value in enumerate(array(values, path, nonempty=False)):
+            tpath = f'{path}[{j}]'
+            table = obj(value, tpath, ('name', 'columns', 'rows'))
+            text(table.get('name'), tpath + '.name')
+            columns = array(table.get('columns'), tpath + '.columns')
+            for k, column in enumerate(columns):
+                text(column, f'{tpath}.columns[{k}]')
+            for k, row in enumerate(array(table.get('rows'), tpath + '.rows', nonempty=False)):
+                if not isinstance(row, list) or len(row) != len(columns):
+                    error(f'{tpath}.rows[{k}]', f'debe contener {len(columns)} celdas')
+                    continue
+                for cell in row:
+                    if cell is not None and not isinstance(cell, (str, int, float, bool)):
+                        error(f'{tpath}.rows[{k}]', 'las celdas deben ser valores escalares JSON')
+                    elif isinstance(cell, float) and not math.isfinite(cell):
+                        error(f'{tpath}.rows[{k}]', 'no se admiten números no finitos')
+
+    root = obj(document, '$', ('schema_version', 'exam_id', 'title', 'description', 'duration_minutes', 'max_score', 'instructions', 'sections', 'questions'), ('internal_notes', 'publication_version', 'resources', 'support_tables', 'support_note', 'source_document'))
     if type(root.get('schema_version')) is not int or root.get('schema_version') != 1:
         error('schema_version', 'solo se admite la versión 1')
     identifier(root.get('exam_id'), 'exam_id')
@@ -127,7 +145,9 @@ def validate_document(document, source='<JSON>'):
             error(path + '.type', 'debe ser multiple_choice, sql_text u open_text')
         grading = q.get('grading')
         if kind == 'multiple_choice':
-            grading = obj(grading, path + '.grading', ('correct_option',))
+            grading = obj(grading, path + '.grading', ('correct_option',), ('notes',))
+            if 'notes' in grading:
+                text(grading['notes'], path + '.grading.notes', empty=True)
             options = array(q.get('options'), path + '.options')
             if not 2 <= len(options) <= 26:
                 error(path + '.options', 'debe contener entre 2 y 26 opciones')
@@ -155,7 +175,9 @@ def validate_document(document, source='<JSON>'):
             rubric_total = Decimal(0)
             for j, value in enumerate(array(grading.get('rubric'), path + '.grading.rubric')):
                 rpath = f'{path}.grading.rubric[{j}]'
-                criterion = obj(value, rpath, ('criterion', 'points'))
+                criterion = obj(value, rpath, ('criterion', 'points'), ('description',))
+                if 'description' in criterion:
+                    text(criterion['description'], rpath + '.description')
                 text(criterion.get('criterion'), rpath + '.criterion')
                 points = number(criterion.get('points'), rpath + '.points')
                 if points is not None:
@@ -163,28 +185,42 @@ def validate_document(document, source='<JSON>'):
             if score is not None and rubric_total != score:
                 error(path + '.grading.rubric', f'suma {rubric_total}; debe sumar {score}')
         if 'tables' in q:
-            for j, value in enumerate(array(q['tables'], path + '.tables', nonempty=False)):
-                tpath = f'{path}.tables[{j}]'
-                table = obj(value, tpath, ('name', 'columns', 'rows'))
-                text(table.get('name'), tpath + '.name')
-                columns = array(table.get('columns'), tpath + '.columns')
-                for k, column in enumerate(columns):
-                    text(column, f'{tpath}.columns[{k}]')
-                for k, row in enumerate(array(table.get('rows'), tpath + '.rows', nonempty=False)):
-                    if not isinstance(row, list) or len(row) != len(columns):
-                        error(f'{tpath}.rows[{k}]', f'debe contener {len(columns)} celdas')
-                        continue
-                    for cell in row:
-                        if cell is not None and not isinstance(cell, (str, int, float, bool)):
-                            error(f'{tpath}.rows[{k}]', 'las celdas deben ser valores escalares JSON')
-                        elif isinstance(cell, float) and not math.isfinite(cell):
-                            error(f'{tpath}.rows[{k}]', 'no se admiten números no finitos')
+            validate_tables(q['tables'], path + '.tables')
     if total != 100:
         error('questions.points', f'la suma es {total}; debe ser 100')
     for sid, section in sections.items():
         points = section.get('points')
         if type(points) in (int, float) and 0 < points <= 100 and totals[sid] != Decimal(str(points)):
             error(f'sections.{sid}.points', f'declara {points}; sus preguntas suman {totals[sid]}')
+    if 'publication_version' in root:
+        value = root['publication_version']
+        if not isinstance(value, str) or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', value):
+            error('publication_version', 'debe ser una versión semántica, por ejemplo 1.0.0')
+    if 'support_tables' in root:
+        validate_tables(root['support_tables'], 'support_tables')
+    if 'support_note' in root:
+        text(root['support_note'], 'support_note', empty=True)
+    resource_ids, filenames = set(), set()
+    for i, value in enumerate(array(root.get('resources', []), 'resources', nonempty=False)):
+        path = f'resources[{i}]'
+        resource = obj(value, path, ('id', 'filename', 'label', 'mime_type', 'sha256'))
+        rid = resource.get('id')
+        if identifier(rid, path + '.id'):
+            if rid in resource_ids:
+                error(path, 'id de recurso duplicado')
+            resource_ids.add(rid)
+        filename = resource.get('filename')
+        if not isinstance(filename, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.xlsx', filename):
+            error(path, 'filename debe ser un nombre .xlsx simple, sin directorios')
+        elif filename in filenames:
+            error(path, 'nombre de recurso duplicado')
+        else:
+            filenames.add(filename)
+        text(resource.get('label'), path + '.label')
+        if resource.get('mime_type') != 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            error(path, 'mime_type debe corresponder a .xlsx')
+        if not isinstance(resource.get('sha256'), str) or not re.fullmatch(r'[a-f0-9]{64}', resource['sha256']):
+            error(path, 'sha256 debe contener 64 caracteres hexadecimales en minúsculas')
     if errors:
         raise ExamValidationError(errors)
     return document
@@ -200,7 +236,12 @@ def load_documents(directory):
         try:
             document = json.loads(path.read_text(encoding='utf-8-sig'), object_pairs_hook=unique_keys,
                                   parse_constant=lambda value: (_ for _ in ()).throw(ValueError(f'Número JSON inválido: {value}')))
+            if isinstance(document, dict) and 'evaluacion' in document:
+                from .excel import adapt_document
+                document = adapt_document(document, path.name)
             validate_document(document, path.name)
+            document = LoadedExam(document)
+            document.resource_data = load_resources(document, path.parent, path.name)
             if document['exam_id'] in identities:
                 errors.append(f'{path.name}: exam_id duplicado entre archivos: {document["exam_id"]}; conserva un archivo vigente por examen')
             identities.add(document['exam_id'])
@@ -220,6 +261,12 @@ def import_documents(db, documents, timestamp):
     results = []
     for filename, document in documents:
         digest = fingerprint(document)
+        publication = document.get('publication_version')
+        if publication:
+            for prior in db.execute('SELECT content_hash,source_json FROM exam_versions WHERE exam_id=?', (document['exam_id'],)):
+                previous = json.loads(prior['source_json'])
+                if previous.get('publication_version') == publication and prior['content_hash'] != digest:
+                    raise ExamValidationError([f'{filename}: la versión {publication} ya está publicada con otro contenido; declara una nueva versión'])
         row = db.execute('SELECT id,version FROM exam_versions WHERE exam_id=? AND content_hash=?', (document['exam_id'], digest)).fetchone()
         if row:
             version_id, version = row['id'], row['version']
@@ -244,6 +291,11 @@ def import_documents(db, documents, timestamp):
                      next(o['text'] for o in q['options'] if o['id'] == grading['correct_option']) if choice else grading['reference_answer'],
                      canonical(grading.get('rubric', [])), version_id, q['id'], position, q['section'],
                      canonical(q.get('tables', [])), canonical(grading), canonical(q)))
+            for resource in document.get('resources', []):
+                content = document.resource_data[resource['id']]
+                db.execute('''INSERT INTO exam_resources(version_id,resource_id,filename,label,mime_type,sha256,content)
+                    VALUES (?,?,?,?,?,?,?)''', (version_id, resource['id'], resource['filename'], resource['label'],
+                    resource['mime_type'], resource['sha256'], content))
             created = True
         db.execute('''INSERT INTO exam_catalog(exam_id,active_version_id,enabled) VALUES (?,?,1)
             ON CONFLICT(exam_id) DO UPDATE SET active_version_id=excluded.active_version_id,enabled=1''', (document['exam_id'], version_id))
@@ -259,7 +311,12 @@ def version_info(version_id):
     document = json.loads(row['source_json'])
     # Deliberate allowlist: no grading, raw document or internal_notes leaves this helper.
     return dict(id=row['id'], exam_id=row['exam_id'], version=row['version'], title=row['title'],
-                description=row['description'], duration_minutes=row['duration_seconds'] // 60,
+                description=row['description'], publication_version=document.get('publication_version'),
+                label=('SQL Junior' if row['exam_id'].startswith(('sql-', 'legacy-sql')) else
+                       'Excel Junior' if row['exam_id'] == 'EXCEL_JUNIOR' else row['title']),
+                resources=[dict(id=r['id'], label=r['label']) for r in document.get('resources', [])],
+                support_tables=document.get('support_tables', []), support_note=document.get('support_note', ''),
+                duration_minutes=row['duration_seconds'] // 60,
                 max_score=row['max_score'], instructions=document['instructions'], sections=document['sections'],
                 question_count=len(document['questions']),
                 manual_count=sum(q['type'] != 'multiple_choice' for q in document['questions']))
@@ -268,7 +325,7 @@ def version_info(version_id):
 def active_versions():
     from .db import get_db
     return get_db().execute('''SELECT v.* FROM exam_catalog c JOIN exam_versions v ON v.id=c.active_version_id
-        WHERE c.enabled=1 ORDER BY v.exam_id''').fetchall()
+        WHERE c.enabled=1 ORDER BY CASE WHEN v.exam_id LIKE 'sql-%' THEN 0 ELSE 1 END,v.exam_id''').fetchall()
 
 
 def public_questions(version_id):
@@ -295,4 +352,37 @@ def admin_questions(version_id, evaluation_id=None):
         q['grading'] = json.loads(q['grading_json'])
         q['answer_text'] = next((o['text'] for o in q['options'] if o['id'] == q['answer']), q['answer'] or 'Sin respuesta')
         result.append(q)
+    return result
+
+
+class LoadedExam(dict):
+    """Validated JSON with private, in-memory resource bytes for atomic import."""
+
+
+def load_resources(document, directory, source):
+    import io
+    import zipfile
+    import xml.etree.ElementTree as ET
+    result = {}
+    for resource in document.get('resources', []):
+        try:
+            path = (directory / resource['filename']).resolve()
+            if not path.is_relative_to(directory.resolve()):
+                raise ValueError('el recurso sale del directorio de evaluaciones')
+            content = path.read_bytes()
+            if hashlib.sha256(content).hexdigest() != resource['sha256']:
+                raise ValueError('SHA-256 no coincide; no se permite modificar un recurso publicado')
+            with zipfile.ZipFile(io.BytesIO(content)) as archive:
+                if '[Content_Types].xml' not in archive.namelist():
+                    raise ValueError('el recurso no es un libro .xlsx')
+                for name in archive.namelist():
+                    if any(part in name.lower() for part in ('vbaproject', 'externallinks/', 'embeddings/')):
+                        raise ValueError('el archivo contiene macros, vínculos externos u objetos incrustados')
+                    if name.startswith('xl/worksheets/') and name.endswith('.xml'):
+                        root = ET.fromstring(archive.read(name))
+                        if root.findall('.//{http://schemas.openxmlformats.org/spreadsheetml/2006/main}f'):
+                            raise ValueError('el archivo de práctica debe entregarse sin fórmulas resueltas')
+            result[resource['id']] = content
+        except (OSError, ValueError, zipfile.BadZipFile, ET.ParseError) as error:
+            raise ExamValidationError([f'{source}: recurso {resource["filename"]}: {error}']) from error
     return result

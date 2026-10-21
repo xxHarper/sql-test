@@ -1,36 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
-<main id="main" class="landing container">
-  <div class="landing-copy">
-<div class="eyebrow">
-<span class="blue-dot">
-</span> EVALUACIÓN TÉCNICA · NIVEL JUNIOR</div>
-    <h1>Los buenos datos<br>empiezan con<br>
-<span>buenas bases.</span>
-</h1>
-    <p class="lead">Un espacio para demostrar lo que sabes de SQL, bases de datos y migración de información.</p>
-    <div class="landing-actions">{% if evaluation and evaluation.status in ['not_started','in_progress'] %}<a class="button primary large" href="{{ url_for('candidate.exam') }}">Continuar mi evaluación <span>→</span>
-</a>{% elif evaluation %}<a class="button primary large" href="{{ url_for('candidate.thanks') }}">Ver confirmación de entrega →</a>{% else %}<a class="button primary large" href="{{ url_for('candidate.access') }}">Acceder a mi evaluación <span>→</span>
-</a>{% endif %}</div>
-    <p class="micro">Necesitarás el código que te proporcionó el administrador.</p>
-    <div class="trust-line">
-<span>◷ {{ exam.duration_minutes }} minutos</span>
-<span>▤ {{ exam.question_count }} preguntas</span>
-<span>◎ {{ exam.max_score }} puntos</span>
+<main id="main" class="container page">
+<div class="page-heading"><div><div class="eyebrow">EVALUACIÓN TÉCNICA · NIVEL JUNIOR</div>
+<h1>Evaluaciones</h1><p class="lead">Elige la evaluación que vas a presentar.</p>
+{% if identity %}<p>Hola, <strong>{{ identity.name }}</strong>. Tus evaluaciones se registran de forma independiente.</p>{% endif %}</div></div>
+<div class="assessment-grid">
+{% for exam in exams %}<section class="card assessment-card">
+<div class="card-topline"><span class="badge blue">{{ exam.label }}</span><span class="micro">{{ exam.publication_version or ('Revisión ' ~ exam.version) }}</span></div>
+<h2>{{ exam.label }}</h2><p class="muted">{{ exam.description }}</p>
+<div class="trust-line"><span>◷ {{ exam.duration_minutes }} minutos</span><span>▤ {{ exam.question_count }} preguntas</span><span>◎ {{ '%g'|format(exam.max_score) }} puntos</span></div>
+{% for section in exam.sections %}<div class="section-preview"><div><h3>{{ section.title }}</h3></div><span class="points">{{ section.points }} <small>pts</small></span></div>{% endfor %}
+<a class="button primary full" href="{{ url_for('candidate.access',exam_id=exam.exam_id) }}">Elegir {{ exam.label }} →</a>
+</section>{% endfor %}
 </div>
-  </div>
-  <div class="overview-card card">
-<div class="card-topline">
-<span class="eyebrow">TU EVALUACIÓN</span>
-<span class="badge blue">Fundamentos</span>
-</div>
-<h2>De la teoría a los datos.</h2>
-<p class="muted">{{ exam.sections|length }} secciones para conocer tu forma de pensar.</p>
-    {% for section in exam.sections %}<div class="section-preview"><span class="section-icon">{{ '%02d'|format(loop.index) }}</span><div><h3>{{ section.title }}</h3></div><span class="points">{{ section.points }} <small>pts</small></span></div>{% endfor %}
-<div class="overview-note">
-<span class="blue-text">✓</span>
-<p>Tu avance se guarda automáticamente.<br>Concéntrate en resolver, una pregunta a la vez.</p>
-</div>
-  </div>
+<p class="micro">Necesitarás un código proporcionado por el administrador para cada evaluación. Tu avance se guarda automáticamente.</p>
+{% if attempts %}<section class="card assessment-card"><h2>Mis evaluaciones</h2>
+{% for attempt in attempts %}<div class="attempt-row"><div><strong>{{ attempt.title }}</strong><p class="micro">Revisión {{ attempt.version }} · {{ status_labels[attempt.status] }}</p></div>
+<form method="post" action="{{ url_for('candidate.select_attempt',evaluation_id=attempt.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="button secondary" type="submit">{{ 'Continuar mi evaluación' if attempt.status in ['not_started','in_progress'] else 'Ver confirmación de entrega' }} →</button></form></div>{% endfor %}
+</section>{% else %}<a class="back-link" href="{{ url_for('candidate.access') }}">Acceder a mi evaluación con un código →</a>{% endif %}
 </main>
 {% endblock %}

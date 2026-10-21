@@ -28,6 +28,7 @@ def init_app(app):
 
 def initialize(documents):
     db = get_db()
+    backup_before_upgrade(db)
     db.execute('PRAGMA journal_mode=WAL')
     schema = '''
         CREATE TABLE IF NOT EXISTS exam_versions (
@@ -70,6 +71,20 @@ def initialize(documents):
         CREATE TABLE IF NOT EXISTS rate_limits (
             bucket TEXT PRIMARY KEY, failures INTEGER NOT NULL, window_started INTEGER NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS candidates (
+            id INTEGER PRIMARY KEY, token TEXT UNIQUE NOT NULL, name TEXT NOT NULL,
+            created_at INTEGER NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS candidate_attempts (
+            evaluation_id INTEGER PRIMARY KEY REFERENCES evaluations(id),
+            candidate_id INTEGER NOT NULL REFERENCES candidates(id)
+        );
+        CREATE TABLE IF NOT EXISTS exam_resources (
+            version_id INTEGER NOT NULL REFERENCES exam_versions(id), resource_id TEXT NOT NULL,
+            filename TEXT NOT NULL, label TEXT NOT NULL, mime_type TEXT NOT NULL,
+            sha256 TEXT NOT NULL, content BLOB NOT NULL,
+            PRIMARY KEY(version_id,resource_id)
+        );
     '''
     from .exams import import_documents
     with db:
@@ -94,6 +109,12 @@ def initialize(documents):
         db.execute('CREATE UNIQUE INDEX IF NOT EXISTS questions_version_source ON questions(version_id,source_id)')
         db.execute('CREATE UNIQUE INDEX IF NOT EXISTS questions_version_position ON questions(version_id,position)')
         results = import_documents(db, documents, now())
+        for operation in ('UPDATE', 'DELETE'):
+            db.execute(f'''CREATE TRIGGER IF NOT EXISTS immutable_resources_{operation.lower()}
+                BEFORE {operation} ON exam_resources
+                BEGIN SELECT RAISE(ABORT, 'Los recursos publicados son inmutables'); END''')
+        db.execute('''CREATE TRIGGER IF NOT EXISTS immutable_candidate_attempt BEFORE UPDATE ON candidate_attempts
+            BEGIN SELECT RAISE(ABORT, 'No se puede cambiar la identidad de un intento'); END''')
         # Content is immutable even before attempts exist. Scores/comments live in answers.
         for table in ('exam_versions', 'questions'):
             for operation in ('UPDATE', 'DELETE'):
@@ -105,6 +126,24 @@ def initialize(documents):
             WHEN OLD.version_id IS NOT NEW.version_id
             BEGIN SELECT RAISE(ABORT, 'No se puede cambiar la versión de un intento'); END''')
     return results
+
+
+def backup_before_upgrade(db):
+    """Use SQLite's online backup API to include WAL data before additive DDL."""
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from uuid import uuid4
+    from contextlib import closing
+    tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if not tables or {'candidates', 'candidate_attempts', 'exam_resources'} <= tables:
+        return
+    directory = Path(current_app.config['DATABASE']).resolve().parent / 'backups'
+    directory.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    path = directory / f'pre-excel-{stamp}-{uuid4().hex[:8]}.sqlite3'
+    with closing(sqlite3.connect(path)) as destination:
+        db.backup(destination)
+    current_app.extensions['migration_backup'] = str(path)
 
 
 def event(db, evaluation_id, action, timestamp=None):

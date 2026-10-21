@@ -12,7 +12,9 @@
 <span>Entrega</span>
 <time>{{ evaluation.submitted_at|moment }}</time>
 </div>
+<a class="button primary full" href="{{ url_for('candidate.welcome') }}">Volver a Evaluaciones →</a>
 <form method="post" action="{{ url_for('candidate.leave') }}">
+<input type="hidden" name="evaluation_id" value="{{ evaluation.id }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <button class="button secondary full" type="submit">Finalizar sesión</button>
 </form>

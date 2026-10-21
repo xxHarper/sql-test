@@ -1,0 +1,10 @@
+{% from '_tables.html' import table %}
+{% if exam.resources %}<section class="card practice-resources">
+<h2>Archivo de práctica</h2>
+{% for resource in exam.resources %}<a class="button secondary" href="{{ url_for('candidate.download_resource', evaluation_id=evaluation.id, resource_id=resource.id) }}">↓ Descargar archivo de práctica</a>{% endfor %}
+<p class="micro">Escribe las fórmulas, explicaciones y VBA o pseudocódigo en las respuestas del examen. No necesitas subir archivos.</p>
+<details class="data-reference"><summary>Instrucciones y datos de apoyo</summary>
+<ol>{% for instruction in exam.instructions %}<li>{{ instruction }}</li>{% endfor %}</ol>
+<p class="muted">{{ exam.support_note }}</p>
+{% for t in exam.support_tables %}{{ table(t.name, t.columns, t.rows) }}{% endfor %}
+</details></section>{% endif %}

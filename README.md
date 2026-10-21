@@ -1,6 +1,6 @@
 # SQL Assessment
 
-Aplicación local para evaluar fundamentos de SQL y migración desde Excel en candidatos junior. Flask + SQLite + HTML/CSS/JavaScript, con todos los recursos en el proyecto. No usa servicios externos, CDN ni Docker.
+Aplicación local con dos evaluaciones para candidatos junior: SQL Junior y Excel Junior. Flask + SQLite + HTML/CSS/JavaScript, con todos los recursos en el proyecto. No usa servicios externos, CDN ni Docker.
 
 ## Inicio rápido en Windows
 
@@ -51,14 +51,37 @@ Para esa ejecución, abre `http://IP_DEL_SERVIDOR:5003`. Al dejar `PORT` sin def
 
 El servidor imprime el puerto efectivo del portal, del panel y de las direcciones LAN, y abre el navegador con ese mismo puerto. El frontend utiliza rutas relativas para acceder al backend, por lo que sigue el puerto del servidor automáticamente.
 
+## Excel Junior en la misma aplicación
+
+El inicio (`/` o `/evaluaciones`) presenta **SQL Junior** y **Excel Junior**. SQL conserva sus 13 reactivos, 100 puntos y 50 minutos. Excel incorpora exactamente el JSON suministrado: **12 preguntas, 100 puntos y 45 minutos**; las preguntas 1–5 valen 4 puntos cada una y se corrigen al entregar; las 6–12 requieren revisión manual (80 puntos), con rúbrica y decimales entre 0 y el máximo del reactivo. Las fórmulas se evalúan por su lógica, admitiendo español/inglés y `;`/`,`; VBA y pseudocódigo se almacenan como texto y nunca se ejecutan.
+
+El candidato descarga **Descargar archivo de práctica** desde las instrucciones o durante Excel y escribe sus respuestas en los campos habituales. También puede desplegar **Instrucciones y datos de apoyo** para consultar Ventas, Productos, Clientes y Resumen sin abrir Excel. No hay carga de archivos ni editor de hojas de cálculo. El JSON fuente, referencias, claves, justificaciones y rúbricas se conservan privados; solo el administrador autenticado ve la guía.
+
+En administración, el filtro **Evaluación** separa SQL/Excel (incluidas versiones históricas); las métricas y el botón **Exportar CSV** de ese panel respetan la evaluación elegida. Cada intento muestra versión, tiempo, estado y revisión manual. **Ver evaluaciones del candidato** reúne las evaluaciones vinculadas a su misma sesión de navegador, con enlaces a sus respuestas y calificaciones independientes. Dos personas con el mismo nombre no se fusionan. Los intentos antiguos se vinculan al recuperar su sesión original; no se altera su token ni se supone una identidad solo por nombre. Para que ambos exámenes queden vinculados, usa **Volver a Evaluaciones** entre ellos. **Finalizar sesión** elimina la identificación de este navegador y solo se permite cuando no hay intentos pendientes de esa identidad.
+
+### Archivos y futuras publicaciones
+
+Coloca los JSON vigentes y sus recursos declarados **en el primer nivel de `evaluaciones/`**, fuera de `static/`. La plantilla incluida es `evaluaciones/plantilla_excel_junior.xlsx`, sin fórmulas resueltas ni macros; su SHA-256 es `217dcb714865ad50486405794ebe41bd46b7e9fb5d3e4ea6d7be7e57c3fb3545`. El importador reconoce tanto el formato SQL existente (`schema_version: 1`) como el formato español suministrado (`schema_version: "1.0"`, `evaluacion`, `preguntas`, `recursos`, `datos_apoyo`). El adaptador conserva íntegro el original en la instantánea privada. No hace falta cambiar código ni editar SQLite al añadir otro examen de cualquiera de estos formatos.
+
+En el formato español, `evaluacion.codigo` identifica el examen y `evaluacion.version` debe ser semántica (por ejemplo `1.0.0`). Deben coincidir numeración, política automática/manual, puntos, opciones y sumas de rúbricas. `recursos` declara `id`, `archivo` (nombre `.xlsx` sin directorios), `nombre`, `mime_type`, `descargable_por_candidato: true` y `sha256`. El archivo debe estar junto al JSON, coincidir con la huella y no contener fórmulas resueltas, macros u objetos incrustados. En el formato canónico se admiten opcionalmente `publication_version`, `resources` (`id`, `filename`, `label`, `mime_type`, `sha256`), `support_tables` y `support_note`. Cada recurso XLSX se guarda como bytes inmutables de la versión en SQLite, así que la descarga de un intento anterior conserva exactamente su archivo aunque una publicación posterior use otro. Las descargas requieren la sesión propietaria del intento y un ID de recurso declarado; no sirven rutas arbitrarias.
+
+**No edites contenido ya publicado manteniendo la misma versión declarada.** Para cambiar preguntas, referencias, rúbricas o archivo, aumenta `evaluacion.version` (o `publication_version` canónica) y actualiza la huella si corresponde. El arranque rechaza la misma versión con distinto contenido y rechaza un archivo alterado respecto a su SHA-256. Conserva un JSON vigente por código de evaluación. Las revisiones internas numéricas de SQLite se mantienen para compatibilidad con el formato SQL; las publicaciones Excel también muestran su versión semántica.
+
+```bat
+python importar_evaluaciones.py --validar
+python importar_evaluaciones.py
+```
+
+El primer comando valida JSON y archivos sin abrir SQLite. El segundo importa idempotentemente; el arranque de `iniciar.bat` también lo hace. Las instalaciones existentes reciben tres tablas adicionales (`candidates`, `candidate_attempts`, `exam_resources`) en una transacción. Antes de modificar el esquema se crea un respaldo consistente con la API de SQLite en **`instance/backups/pre-excel-*.sqlite3`**, incluyendo lo confirmado en WAL. No se borran ni sustituyen preguntas SQL, respuestas, notas, eventos o claves de sesión. Los intentos, incluidos códigos aún sin utilizar, mantienen su versión. No se añaden dependencias ni se cambia el puerto configurado.
+
 ## Aplicar una evaluación
 
-1. Entra al panel y genera entre 1 y 25 códigos. Cada fila representa una evaluación independiente y permanece en el historial.
+1. Entra al panel, selecciona SQL Junior o Excel Junior en el generador y genera entre 1 y 25 códigos de esa evaluación. Cada fila representa una evaluación independiente y permanece en el historial.
 2. Copia un código por candidato y comparte la dirección del portal. No compartas la contraseña del administrador.
-3. El candidato ingresa su nombre completo y código. El código se consume al registrar el acceso, **antes** de comenzar el examen; no podrá registrarse otra persona con él. El estado seguirá siendo «No iniciado», con la indicación «Acceso registrado», hasta que comience.
-4. El candidato lee las instrucciones y presiona **Comenzar evaluación**. En ese momento inicia el plazo de 50 minutos del servidor (v2; los códigos de v1 conservan 45 minutos).
+3. En «Evaluaciones», el candidato elige «SQL Junior» o «Excel Junior» e ingresa su nombre completo y el código correspondiente. La ruta anterior `/acceso` sigue aceptando ambos tipos de códigos. El código se consume al registrar el acceso, **antes** de comenzar el examen; no podrá registrarse otra persona con él. El estado seguirá siendo «No iniciado», con la indicación «Acceso registrado», hasta que comience.
+4. El candidato lee las instrucciones y presiona **Comenzar evaluación**. En ese momento inicia el plazo del servidor: SQL v2, 50 minutos; Excel Junior, 45 minutos. Los códigos SQL de v1 conservan 45 minutos.
 5. Responde una pregunta a la vez; puede navegar por todas, revisar su progreso y entregar con confirmación. El texto SQL es solo una respuesta: **nunca se ejecuta**.
-6. Tras la entrega aparece un agradecimiento y la referencia. No se publican las soluciones, comentarios del evaluador ni la calificación para el candidato.
+6. Tras la entrega aparece un agradecimiento y la referencia. «Volver a Evaluaciones» permite presentar el otro examen con su propio código conservando la identidad; no cierres la sesión entre ambos. No se publican las soluciones, comentarios del evaluador ni la calificación para el candidato.
 
 ### Guardado, recargas y desconexiones
 
@@ -161,7 +184,7 @@ La fuente de verdad del examen oficial es **`evaluaciones/reactivos_sql_junior_v
 
 Al arrancar, la aplicación lee todos los archivos `*.json` de `evaluaciones/` y valida **el lote completo antes de abrir SQLite**. Si alguno es inválido, informa archivo, campo y problema y cancela el arranque sin crear ni modificar la base. También rechaza propiedades JSON duplicadas, IDs de reactivo/opción/sección duplicados, referencias inválidas, tipos desconocidos, modos de calificación incorrectos y tablas con filas de anchura incorrecta.
 
-Cada archivo debe usar la estructura real del oficial: `schema_version`, `exam_id`, `title`, `description`, `duration_minutes`, `max_score`, `instructions`, `sections` y `questions`. `internal_notes` es opcional y privado. Las secciones contienen `id`, `title`, `points`. Cada pregunta contiene `id`, `section`, `type`, `points`, `prompt`, `grading`, y opcionalmente `tables` y `title`. `options` se requiere para `multiple_choice`.
+Los archivos SQL y los futuros exámenes en formato canónico usan: `schema_version`, `exam_id`, `title`, `description`, `duration_minutes`, `max_score`, `instructions`, `sections` y `questions`. `internal_notes` es opcional y privado. Las secciones contienen `id`, `title`, `points`. Cada pregunta contiene `id`, `section`, `type`, `points`, `prompt`, `grading`, y opcionalmente `tables` y `title`. `options` se requiere para `multiple_choice`.
 
 - `multiple_choice`: opciones con `id` y `text`; `grading.correct_option` identifica la correcta. Calificación automática al entregar.
 - `sql_text` y `open_text`: `grading.mode` debe ser `manual`; `reference_answer`, `rubric` (lista de `criterion` y `points`) y `notes` opcional son solo para el evaluador.
@@ -172,7 +195,7 @@ Cada archivo debe usar la estructura real del oficial: `schema_version`, `exam_i
 ### Cambiar el examen o agregar otro sin editar Python
 
 1. Detén el servidor y respalda `instance/` antes de actualizar el proyecto o sus exámenes.
-2. Para revisar el mismo examen, edita su JSON y conserva `exam_id`, incluso aunque el ID oficial termine en `-v1`. El número de revisión lo administra SQLite. `schema_version: 1` identifica el formato del archivo, no la revisión del examen.
+2. Para revisar un examen canónico sin `publication_version`, edita su JSON y conserva `exam_id`, incluso aunque el ID oficial termine en `-v1`. El número de revisión lo administra SQLite. `schema_version: 1` identifica el formato del archivo, no la revisión del examen.
 3. Para agregar otra evaluación, coloca otro JSON de la misma estructura con un **`exam_id` distinto** en `evaluaciones/`. Mantén solo un archivo vigente por `exam_id`; las versiones históricas se conservan en SQLite y no deben duplicarse como archivos dentro de esa carpeta.
 4. Valida los archivos sin acceder a la base:
 
@@ -183,7 +206,7 @@ Cada archivo debe usar la estructura real del oficial: `schema_version`, `exam_i
 5. Si la validación es correcta, ejecuta `iniciar.bat`. La importación es automática. También puedes importar explícitamente desde la consola con `.venv\Scripts\python.exe importar_evaluaciones.py`, con el servidor detenido.
 6. En el panel, selecciona la evaluación y su versión vigente antes de generar códigos. La guía permite consultar todas las versiones, incluidas las anteriores.
 
-Una huella SHA-256 del contenido JSON canónico evita duplicados. Cambiar solo espacios, indentación u orden de propiedades no crea otra versión. Cambiar contenido crea una versión nueva e inmutable; no sobrescribe las anteriores, incluso si aún no tienen candidatos. Volver exactamente a un contenido histórico reutiliza esa versión.
+Una huella SHA-256 del contenido JSON canónico evita duplicados. Cambiar solo espacios, indentación u orden de propiedades no crea otra versión. En el formato canónico sin versión declarada, cambiar contenido crea una versión nueva e inmutable; no sobrescribe las anteriores, incluso si aún no tienen candidatos. Volver exactamente a un contenido histórico reutiliza esa versión.
 
 **Cada código queda vinculado a su versión al crearse**, incluidos los que todavía no se han utilizado. Cambiar el JSON afecta a los códigos nuevos, no a los ya emitidos. Los intentos activos conservan sus preguntas, opciones, tablas, duración, respuestas correctas y rúbricas. Las respuestas, comentarios, entregas y notas anteriores permanecen en SQLite; nunca se escriben en los JSON. El CSV identifica `exam_id`, versión e ID original de cada pregunta.
 
@@ -203,7 +226,7 @@ Desde Windows, después de instalar:
 .venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Las pruebas usan bases temporales y comprueban v2 (13 preguntas, 100 puntos y 50 minutos), la compatibilidad de v1 (12 preguntas y 45 minutos), acceso y límites de intentos, aislamiento, CSRF, XSS, bloqueo de SQL, temporizador, vencimiento sin navegador, reinicio y recarga, guardado y conflictos entre pestañas, entrega definitiva, revisión manual, protección de guías y exportación CSV. No se crean credenciales de prueba en la base real.
+Las pruebas usan bases temporales y comprueban Excel (12 preguntas, 100 puntos, 45 minutos, recursos congelados, SHA-256, privacidad, corrección parcial y mismo candidato en ambos exámenes), v2 (13 preguntas, 100 puntos y 50 minutos), la compatibilidad de v1 (12 preguntas y 45 minutos), acceso y límites de intentos, aislamiento, CSRF, XSS, bloqueo de SQL, temporizador, vencimiento sin navegador, reinicio y recarga, guardado y conflictos entre pestañas, entrega definitiva, revisión manual, protección de guías y exportación CSV. No se crean credenciales de prueba en la base real.
 
 La comprobación opcional de navegador está en `tests/browser_check.py`. Usa un servidor Waitress real y una base temporal, verifica escritorio y móvil, desconexión y recuperación, entrega voluntaria, vencimiento, revisión y descarga CSV. Genera capturas en `artifacts/`. Para prepararla en un equipo de desarrollo con internet (no se requiere para operar la aplicación):
 

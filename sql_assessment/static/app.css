@@ -2129,3 +2129,15 @@ dialog::backdrop {
   }
 }
 
+
+/* Additional assessments share the original cards, typography and controls. */
+.assessment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px}
+.assessment-card{padding:28px;margin-bottom:24px}
+.assessment-card .trust-line{flex-wrap:wrap;margin:24px 0}
+.assessment-card .button{margin-top:20px}
+.attempt-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0;border-bottom:1px solid var(--line)}
+.practice-resources{padding:20px;margin:20px 0}
+.practice-resources h2{font-size:1.1rem}
+.filters{flex-wrap:wrap}
+.filters select{max-width:290px}
+@media(max-width:680px){.attempt-row{align-items:flex-start;flex-direction:column}.filters select{max-width:100%}}
