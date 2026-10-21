@@ -5,6 +5,7 @@ Requires playwright and its Chromium browser, not needed by the application.
 Uses a temporary database and a randomly generated test password.
 """
 import secrets
+import json
 import sys
 import tempfile
 import threading
@@ -18,7 +19,7 @@ from waitress import create_server
 from werkzeug.security import generate_password_hash
 from sql_assessment import create_app
 from sql_assessment.db import get_db
-from exam_fixture import QUESTIONS
+from sql_assessment.exams import active_versions, version_info
 from run import deadline_worker
 
 
@@ -30,6 +31,11 @@ def main():
         password = secrets.token_urlsafe(24)
         app = create_app({'DATABASE':str(Path(directory) / 'browser.sqlite3'), 'NOW': lambda: clock[0]})
         with app.app_context():
+            active = active_versions()
+            assert len(active) == 1 and active[0]['exam_id'] == 'sql-migracion-junior-v2'
+            document = json.loads(active[0]['source_json'])
+            questions = [dict(id=i, points=q['points'], kind=q['type'], correct=q['grading'].get('correct_option')) for i,q in enumerate(document['questions'],1)]
+            assert len(questions) == 13 and document['duration_minutes'] == 50
             with get_db() as db:
                 db.execute("INSERT INTO settings VALUES ('admin_password',?)", (generate_password_hash(password),))
         server = create_server(app, host='127.0.0.1', port=0, threads=4)
@@ -58,6 +64,7 @@ def main():
                 admin.get_by_label('Contraseña de administrador').fill(password)
                 admin.get_by_role('button', name='Entrar al panel').click()
                 expect(admin.get_by_role('heading', name='Evaluaciones', exact=True)).to_be_visible()
+                expect(admin.locator('#version-id option:checked')).to_contain_text('sql-migracion-junior-v2')
                 admin.locator('#count').fill('2')
                 admin.get_by_role('button', name='Crear códigos').click()
                 codes = admin.locator('.code-row code').all_text_contents()
@@ -68,10 +75,11 @@ def main():
                 candidate.get_by_label('Código de evaluación').fill(codes[0])
                 candidate.get_by_role('button', name='Ver instrucciones').click()
                 expect(candidate.get_by_role('heading', name='Hola, Candidata de prueba.')).to_be_visible()
+                expect(candidate.locator('.metrics')).to_contain_text('50')
                 candidate.get_by_role('button', name='Comenzar evaluación').click()
                 expect(candidate.locator('#save-status')).to_contain_text('Todos los cambios guardados')
                 assert candidate.locator('.question-card:visible').count() == 1
-                for question in QUESTIONS[:5]:
+                for question in questions[:5]:
                     candidate.locator(f'[data-go="{question["id"]-1}"]').click()
                     candidate.locator(f'input[data-answer="{question["id"]}"][value="{question["correct"]}"]').check()
                     expect(candidate.locator('#save-status')).to_contain_text('Todos los cambios guardados')
@@ -88,10 +96,17 @@ def main():
                 candidate.reload()
                 expect(candidate.locator('#save-status')).to_contain_text('Todos los cambios guardados')
                 expect(candidate.locator('#answer-6')).to_have_value('SELECT nombre, correo FROM Clientes;\n-- respuesta recuperada')
-                for question in QUESTIONS[6:]:
+                for question in questions[6:]:
                     candidate.locator(f'[data-go="{question["id"]-1}"]').click()
-                    candidate.locator(f'#answer-{question["id"]}').fill('Respuesta de prueba para revisión manual.')
+                    answer = document['questions'][question['id']-1]['grading']['reference_answer'] if question['id']==13 else 'Respuesta de prueba para revisión manual.'
+                    if question['id']==13:
+                        expect(candidate.locator('[data-question="13"] .sql-editor textarea')).to_be_visible()
+                        for q in document['questions']:
+                            if q['type'] != 'multiple_choice':
+                                assert q['grading']['reference_answer'] not in candidate.content()
+                    candidate.locator(f'#answer-{question["id"]}').fill(answer)
                     expect(candidate.locator('#save-status')).to_contain_text('Todos los cambios guardados')
+                candidate.screenshot(path=str(screenshots / 'pregunta-13.png'), full_page=True)
                 candidate.set_viewport_size({'width':390,'height':844})
                 candidate.locator('[data-go="10"]').click()
                 candidate.screenshot(path=str(screenshots / 'movil.png'), full_page=True)
@@ -100,7 +115,7 @@ def main():
                     .map(e => ({tag:e.tagName, cls:e.className, right:e.getBoundingClientRect().right})).slice(0,15)''')
                 assert candidate.evaluate('document.documentElement.scrollWidth <= innerWidth'), f'Mobile page overflow: {overflow}'
                 candidate.get_by_role('button', name='Entregar evaluación', exact=True).click()
-                expect(candidate.locator('#answered-count')).to_have_text('12')
+                expect(candidate.locator('#answered-count')).to_have_text(str(len(questions)))
                 candidate.get_by_role('button', name='Seguir revisando').click()
                 expect(candidate.locator('#submit-dialog')).not_to_be_visible()
                 candidate.get_by_role('button', name='Entregar evaluación', exact=True).click()
@@ -111,7 +126,10 @@ def main():
                 row = admin.locator('tr', has=admin.locator('code', has_text=codes[0]))
                 expect(row).to_contain_text('Entregado')
                 row.get_by_role('link', name='Revisar').click()
-                for question in QUESTIONS[5:]:
+                expect(admin.locator('.grading-question')).to_have_count(13)
+                for criterion in document['questions'][12]['grading']['rubric']:
+                    expect(admin.get_by_text(criterion['criterion'] + ' — ' + str(criterion['points']) + ' puntos',exact=True)).to_have_count(1)
+                for question in questions[5:]:
                     admin.locator(f'#score-{question["id"]}').fill(str(question['points']))
                 admin.locator('#comment-6').fill('Consulta clara. <script>no ejecutar</script>')
                 admin.get_by_role('button', name='Guardar revisión', exact=True).click()
@@ -125,7 +143,7 @@ def main():
                 download.save_as(str(screenshots / 'resultados-prueba.csv'))
                 assert 'Candidata de prueba' in Path(download.path()).read_text(encoding='utf-8-sig')
                 admin.screenshot(path=str(screenshots / 'calificacion.png'), full_page=True)
-                # Verify expiration in the browser without waiting 45 real minutes.
+                # Verify expiration in the browser without waiting 50 real minutes.
                 timeout_context = browser.new_context(viewport={'width':390,'height':844})
                 timeout_page = timeout_context.new_page()
                 timeout_page.goto(url + '/acceso')
@@ -134,13 +152,13 @@ def main():
                 timeout_page.get_by_role('button', name='Ver instrucciones').click()
                 timeout_page.get_by_role('button', name='Comenzar evaluación').click()
                 expect(timeout_page.locator('#save-status')).to_contain_text('Todos los cambios guardados')
-                clock[0] += 2700
+                clock[0] += document['duration_minutes'] * 60
                 expect(timeout_page.get_by_role('heading', name='Gracias, Prueba de vencimiento.')).to_be_visible(timeout=15000)
                 expect(timeout_page.get_by_text('Se entregaron automáticamente tus respuestas', exact=False)).to_be_visible()
                 assert not errors, errors
                 assert not external, external
                 browser.close()
-                print('OK: navegador Chromium, flujo candidato/admin, guardado, desconexión, recarga, móvil, entrega, calificación, CSV y vencimiento. Sin errores JavaScript ni peticiones externas.')
+                print('OK: examen activo sql-migracion-junior-v2, 13 preguntas, 50 minutos, Q13 con editor SQL y rúbrica privada, entrega y calificación 100/100, CSV, recuperación y vencimiento. Sin errores JavaScript ni peticiones externas.')
         finally:
             stop.set()
             worker.join(3)

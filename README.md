@@ -56,7 +56,7 @@ El servidor imprime el puerto efectivo del portal, del panel y de las direccione
 1. Entra al panel y genera entre 1 y 25 códigos. Cada fila representa una evaluación independiente y permanece en el historial.
 2. Copia un código por candidato y comparte la dirección del portal. No compartas la contraseña del administrador.
 3. El candidato ingresa su nombre completo y código. El código se consume al registrar el acceso, **antes** de comenzar el examen; no podrá registrarse otra persona con él. El estado seguirá siendo «No iniciado», con la indicación «Acceso registrado», hasta que comience.
-4. El candidato lee las instrucciones y presiona **Comenzar evaluación**. En ese momento inicia el plazo de 45 minutos del servidor.
+4. El candidato lee las instrucciones y presiona **Comenzar evaluación**. En ese momento inicia el plazo de 50 minutos del servidor (v2; los códigos de v1 conservan 45 minutos).
 5. Responde una pregunta a la vez; puede navegar por todas, revisar su progreso y entregar con confirmación. El texto SQL es solo una respuesta: **nunca se ejecuta**.
 6. Tras la entrega aparece un agradecimiento y la referencia. No se publican las soluciones, comentarios del evaluador ni la calificación para el candidato.
 
@@ -77,12 +77,13 @@ El servidor imprime el puerto efectivo del portal, del panel y de las direccione
 | --- | --- | --- |
 | Conocimientos generales | 1–5, cuatro opciones | 20 |
 | SQL práctico | 6–9, revisión manual | 40 |
-| Migración y bases de datos | 10–12, abiertas | 40 |
-| **Total** | **12** | **100** |
+| Estructuración y migración de datos | 10–12, abiertas | 30 |
+| Creación y relación de tablas | 13, SQL con revisión manual | 10 |
+| **Total** | **13** | **100** |
 
-Las cinco preguntas de opción múltiple se califican automáticamente al entregar. Las siete restantes requieren revisión manual. En **Ver detalle / Revisar** están la respuesta del candidato, la guía, los criterios y un comentario opcional para cada pregunta. También existe una guía general protegida en `/admin/guia`.
+Las cinco preguntas de opción múltiple se califican automáticamente al entregar. Las ocho restantes requieren revisión manual. En **Ver detalle / Revisar** están la respuesta del candidato, la guía, los criterios y un comentario opcional para cada pregunta. También existe una guía general protegida en `/admin/guia`.
 
-**Guardar revisión** permite trabajo parcial; **Finalizar calificación** exige puntajes para las preguntas 6–12 y cambia el estado a «Calificado». Los puntajes admiten decimales en la interfaz. Cada pregunta está limitada a su máximo, el total no puede superar 100. Puedes corregir una revisión; si borras un puntaje de un examen calificado y guardas, vuelve a pendiente de calificar. Los resultados parciales se etiquetan como tales y no se exportan como calificación final.
+**Guardar revisión** permite trabajo parcial; **Finalizar calificación** exige puntajes para las preguntas 6–13 y cambia el estado a «Calificado». Los puntajes admiten decimales en la interfaz. Cada pregunta está limitada a su máximo, el total no puede superar 100. Puedes corregir una revisión; si borras un puntaje de un examen calificado y guardas, vuelve a pendiente de calificar. Los resultados parciales se etiquetan como tales y no se exportan como calificación final.
 
 | Calificación orientativa | Clasificación |
 | --- | --- |
@@ -96,7 +97,7 @@ Con decimales se aplican los umbrales ≥85, ≥70 y ≥55, sin redondear antes 
 ### Estados
 
 - **No iniciado:** código creado o candidato registrado en instrucciones.
-- **En proceso:** plazo de 45 minutos iniciado.
+- **En proceso:** plazo de la versión asignada iniciado (50 minutos para v2).
 - **Entregado:** entrega voluntaria pendiente de calificar.
 - **Vencido:** entrega automática por tiempo, pendiente de calificar.
 - **Calificado:** revisión manual finalizada, con nota sobre 100.
@@ -126,7 +127,8 @@ SQL Assessment/
 ├── configurar.py           # Contraseña inicial y restablecimiento local
 ├── importar_evaluaciones.py # Validación/importación por consola
 ├── evaluaciones/           # Archivos JSON privados, fuente de verdad
-│   └── reactivos_sql_junior.json
+│   ├── reactivos_sql_junior_v2.json # Examen activo
+│   └── historico/reactivos_sql_junior.json # Archivo v1, no se activa para códigos nuevos
 ├── requirements.txt        # Dependencias fijadas
 ├── wheelhouse/             # Paquetes offline para Windows x64, Python 3.10–3.14
 ├── sql_assessment/
@@ -145,7 +147,17 @@ SQL Assessment/
 
 ## Exámenes desde JSON: importar y versionar
 
-La fuente de verdad del examen oficial es **`evaluaciones/reactivos_sql_junior.json`**, copiado íntegramente del archivo proporcionado. No se usa un banco de preguntas dentro del código. El archivo es privado del servidor; no está en `static/` ni tiene una ruta de descarga pública.
+### Evaluación actualmente activa
+
+**`sql-migracion-junior-v2`** está habilitada para códigos nuevos: **13 preguntas, 100 puntos, 50 minutos**. Q13 solicita `CREATE TABLE Direcciones` con una `FOREIGN KEY` a Clientes; utiliza el mismo editor SQL que Q06–Q09 y se revisa manualmente hasta 10 puntos. El SQL de los candidatos no se ejecuta.
+
+V1 se conserva en `evaluaciones/historico/reactivos_sql_junior.json` y, en instalaciones existentes, en SQLite junto con sus intentos. El importador lee solo los JSON del primer nivel de `evaluaciones/`; el archivo histórico no vuelve a habilitar v1 para códigos nuevos. No copies el JSON histórico al primer nivel si deseas mantener únicamente v2 activa.
+
+El nuevo archivo define un **`exam_id` distinto** (`sql-migracion-junior-v2`). Se respeta exactamente: el contador interno de revisiones empieza en **1 para ese identificador**, y no debe confundirse con el nombre oficial **v2**. El selector, el historial y la guía del administrador muestran el identificador y su revisión para distinguirlos. V1 conserva `sql-migracion-junior-v1`, su máximo de 100 puntos, sus 12 reactivos y sus 45 minutos en todos los códigos ya emitidos.
+
+Al actualizar una instalación existente, reemplaza los archivos de código y el banco conservando `instance/`, y mueve `evaluaciones/reactivos_sql_junior.json` a `evaluaciones/historico/` si aún está en el primer nivel. Al reiniciar, el importador conserva las versiones y resultados anteriores y habilita únicamente los JSON vigentes del primer nivel. Si descomprimes encima de una instalación anterior, el ZIP no elimina automáticamente el JSON viejo: verifica este traslado antes de reiniciar.
+
+La fuente de verdad del examen oficial es **`evaluaciones/reactivos_sql_junior_v2.json`**, copiado íntegramente del archivo proporcionado. No se usa un banco de preguntas dentro del código. El archivo es privado del servidor; no está en `static/` ni tiene una ruta de descarga pública.
 
 Al arrancar, la aplicación lee todos los archivos `*.json` de `evaluaciones/` y valida **el lote completo antes de abrir SQLite**. Si alguno es inválido, informa archivo, campo y problema y cancela el arranque sin crear ni modificar la base. También rechaza propiedades JSON duplicadas, IDs de reactivo/opción/sección duplicados, referencias inválidas, tipos desconocidos, modos de calificación incorrectos y tablas con filas de anchura incorrecta.
 
@@ -155,7 +167,7 @@ Cada archivo debe usar la estructura real del oficial: `schema_version`, `exam_i
 - `sql_text` y `open_text`: `grading.mode` debe ser `manual`; `reference_answer`, `rubric` (lista de `criterion` y `points`) y `notes` opcional son solo para el evaluador.
 - `tables`: lista de objetos con `name`, `columns` y `rows`. Se conservan nombres, textos, valores, orden y tipos del JSON, incluidos ceros iniciales de IDs almacenados como texto, ceros numéricos y correos vacíos.
 - `max_score` debe ser **100** y la suma de preguntas debe ser **100**. Cada sección debe coincidir con la suma de sus preguntas y cada rúbrica con el máximo de su reactivo. Los puntos deben ser positivos y finitos.
-- El examen oficial tiene 12 preguntas, cinco automáticas y siete manuales. Se admite agregar preguntas en futuros archivos (hasta 200), manteniendo el total de 100; la interfaz, el guardado, la revisión y el CSV ajustan sus conteos automáticamente.
+- El examen oficial v2 tiene 13 preguntas, cinco automáticas y ocho manuales, con duración de 50 minutos. Se admite agregar preguntas en futuros archivos (hasta 200), manteniendo el total de 100; la interfaz, el guardado, la revisión y el CSV ajustan sus conteos automáticamente.
 
 ### Cambiar el examen o agregar otro sin editar Python
 
@@ -191,7 +203,7 @@ Desde Windows, después de instalar:
 .venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Las pruebas usan bases temporales y comprueban las 12 preguntas y 100 puntos, acceso y límites de intentos, aislamiento, CSRF, XSS, bloqueo de SQL, temporizador, vencimiento sin navegador, reinicio y recarga, guardado y conflictos entre pestañas, entrega definitiva, revisión manual, protección de guías y exportación CSV. No se crean credenciales de prueba en la base real.
+Las pruebas usan bases temporales y comprueban v2 (13 preguntas, 100 puntos y 50 minutos), la compatibilidad de v1 (12 preguntas y 45 minutos), acceso y límites de intentos, aislamiento, CSRF, XSS, bloqueo de SQL, temporizador, vencimiento sin navegador, reinicio y recarga, guardado y conflictos entre pestañas, entrega definitiva, revisión manual, protección de guías y exportación CSV. No se crean credenciales de prueba en la base real.
 
 La comprobación opcional de navegador está en `tests/browser_check.py`. Usa un servidor Waitress real y una base temporal, verifica escritorio y móvil, desconexión y recuperación, entrega voluntaria, vencimiento, revisión y descarga CSV. Genera capturas en `artifacts/`. Para prepararla en un equipo de desarrollo con internet (no se requiere para operar la aplicación):
 

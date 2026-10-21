@@ -6,9 +6,9 @@ Comprobación realizada el 20 de octubre de 2026 con Python 3.14, Flask 3.1.3, S
 
 Comando: `python -m unittest discover -s tests -v`.
 
-**Resultado: 50 pruebas aprobadas** (25 de regresión, 20 de integración de JSON/versionado y 5 de configuración de arranque).
+**Resultado: 58 pruebas aprobadas** (25 de regresión de v1, 20 de importación/versionado, 5 de arranque y 8 específicas del examen v2).
 
-Las pruebas de regresión cubren:
+Las pruebas de regresión sobre v1 (con archivos y bases temporales, sin activar v1 para nuevos candidatos) cubren:
 
 - Creación automática e idempotente de las 12 preguntas, con 100 puntos en total.
 - Páginas públicas y recursos estáticos locales.
@@ -48,7 +48,30 @@ Las pruebas de integración de JSON/versionado cubren:
 - Volver a contenido histórico reutiliza su versión sin eliminar las posteriores.
 - Migración de una base con el esquema anterior real: conserva datos de intentos calificados, activos y códigos pendientes, además de notas, respuestas, comentarios y clave de sesión. Un intento activo de esa base puede seguir y entregarse con la clave de corrección original.
 
-El archivo `evaluaciones/reactivos_sql_junior.json` es idéntico byte por byte al proporcionado en Descargas. SHA-256: `c816a800ded628ede4e5e11e907b8381e1a9c17a7404bb9a55a0daa486b58766`.
+El archivo histórico `evaluaciones/historico/reactivos_sql_junior.json` es idéntico byte por byte al proporcionado en Descargas. SHA-256: `c816a800ded628ede4e5e11e907b8381e1a9c17a7404bb9a55a0daa486b58766`.
+
+## Actualización oficial v2
+
+La evaluación activa verificada en SQLite y en el banco de archivos es **`sql-migracion-junior-v2`**: **13 preguntas, 100 puntos y 50 minutos**. Es la única habilitada para códigos nuevos. `sql-migracion-junior-v1` permanece en SQLite, deshabilitada para nuevos códigos, y su JSON está archivado en `evaluaciones/historico/`. Los códigos emitidos anteriormente conservan la versión que tenían asignada.
+
+El archivo v2 tiene un `exam_id` propio. Su revisión interna es **1 dentro de `sql-migracion-junior-v2`**, sin sobrescribir `sql-migracion-junior-v1`. El panel muestra ambas identidades de forma inequívoca. No se alteró el formato del JSON para forzar otra numeración.
+
+Los ocho casos nuevos comprueban:
+
+- Banco activo v2 y copia exacta del documento, sin IDs duplicados: distribución 20 + 40 + 30 + 10 = 100.
+- Plazo de 3,000 segundos; Q13 con `type=sql_text`, el mismo editor y máximo de 10 puntos.
+- Examen completo con 13 respuestas, cinco puntajes automáticos y ocho manuales; Q13 rechaza más de 10 puntos y es obligatoria para finalizar la revisión. Resultado de la prueba: 100/100 y CSV con Q13.
+- Criterios y referencia exactos de Q13 disponibles para el administrador y ausentes en las respuestas públicas; acceso a los archivos JSON bloqueado desde HTTP.
+- `CREATE TABLE`, `DROP TABLE` y texto XSS se almacenan como respuestas; no se ejecuta SQL del candidato y se escapa el HTML.
+- Selección de v2 para códigos nuevos; ninguna opción permite emitir códigos de la v1 retirada.
+- Reinicio sin duplicar las 13 preguntas ni alterar respuestas.
+- Actualización sobre una base temporal con v1: comparación íntegra de preguntas, respuestas, comentarios, estados y calificaciones anteriores. Los códigos pendientes e intentos activos conservan 12 preguntas y 45 minutos; los nuevos reciben 13 preguntas y 50 minutos.
+
+La copia v2 es idéntica byte por byte al archivo proporcionado. SHA-256: `dcdda714c5325271ded64c7635460d0db3e3814c513c2456f19743b05c4feb85`.
+
+El importador y el editor existentes ya admiten este formato; no fue necesario cambiar sus reglas ni el esquema. Se comprobó además que todos los archivos de `sql_assessment/static/` (CSS, JavaScript e icono) son idénticos a la entrega anterior. Solo se actualizó el texto identificador de examen/revisión del panel para distinguir v1 y v2.
+
+La carpeta local no tenía base de datos ni intentos previos al efectuar esta actualización. Se importaron v1 y v2 en orden y se consultó el catálogo real, con v2 habilitada y v1 conservada. La prueba de conservación de resultados se realizó además sobre una base temporal con intentos previos reales de prueba, sin añadir candidatos de demostración a la base local.
 
 ## Puerto y arranque
 
@@ -62,7 +85,7 @@ El archivo `evaluaciones/reactivos_sql_junior.json` es idéntico byte por byte a
 
 Comando: `python tests/browser_check.py`, con Playwright y Chromium instalados solo como herramientas de desarrollo.
 
-**Resultado: recorrido completo aprobado con el examen oficial JSON**, sin errores JavaScript ni solicitudes externas. La prueba levanta Waitress en loopback con una base temporal y una contraseña aleatoria. Comprueba:
+**Resultado: recorrido completo aprobado con el examen oficial JSON v2**, sin errores JavaScript ni solicitudes externas. La prueba levanta Waitress en loopback con una base temporal y una contraseña aleatoria. Comprueba:
 
 1. Inicio, autenticación del administrador y creación de códigos.
 2. Registro de candidato, instrucciones e inicio.
@@ -70,15 +93,15 @@ Comando: `python tests/browser_check.py`, con Playwright y Chromium instalados s
 4. Edición SQL, guardado y progreso.
 5. Desconexión simulada y guardado automático al restablecer la conexión.
 6. Recarga con recuperación de respuesta y pregunta activa.
-7. Las 12 respuestas y vista móvil de 390 px sin desbordamiento horizontal.
+7. Las 13 respuestas y vista móvil de 390 px sin desbordamiento horizontal.
 8. Cancelación de la confirmación y entrega voluntaria.
 9. Agradecimiento sin calificación del candidato.
-10. Revisión de las siete preguntas, comentarios, guardado parcial y finalización en 100/100.
+10. Revisión de las ocho preguntas manuales, incluida Q13, comentarios, guardado parcial y finalización en 100/100.
 11. Descarga CSV real desde el navegador.
 12. Entrega automática visible al avanzar el reloj controlado del servidor hasta el vencimiento.
 13. Ausencia de errores JavaScript y de solicitudes a servicios externos desde las páginas.
 
-La revisión visual detectó y corrigió un desbordamiento de la navegación móvil. Las capturas quedan en `artifacts/` al ejecutar la prueba.
+La navegación móvil mantiene la corrección realizada anteriormente. No se modificó el diseño en esta actualización. Las capturas quedan en `artifacts/`, incluida `pregunta-13.png`, al ejecutar la prueba.
 
 ## Paquetes offline
 

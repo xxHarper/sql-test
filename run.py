@@ -36,7 +36,7 @@ def main():
     except ExamValidationError as error:
         raise SystemExit(str(error))
     for result in app.extensions['exam_imports']:
-        print(f'Examen: {result["exam_id"]} · versión {result["version"]} · {"importada" if result["created"] else "sin cambios"}', flush=True)
+        print(f'Examen: {result["exam_id"]} · revisión {result["version"]} · {"importada" if result["created"] else "sin cambios"}', flush=True)
     from configurar import configure
     configure(app)
     url = f'http://127.0.0.1:{args.port}'

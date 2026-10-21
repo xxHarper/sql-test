@@ -1,0 +1,692 @@
+{
+  "schema_version": 1,
+  "exam_id": "sql-migracion-junior-v2",
+  "title": "Evaluación Técnica — SQL y Bases de Datos",
+  "description": "Evaluación de fundamentos de bases de datos, SQL básico, limpieza/migración de Excel y creación de tablas relacionadas para perfiles junior.",
+  "duration_minutes": 50,
+  "max_score": 100,
+  "instructions": [
+    "Lee cuidadosamente cada pregunta.",
+    "Responde con base en tus conocimientos.",
+    "Puedes utilizar SQL estándar en los ejercicios.",
+    "No es necesario ejecutar las consultas.",
+    "En las preguntas abiertas se evaluará tu razonamiento."
+  ],
+  "sections": [
+    {
+      "id": "fundamentos",
+      "title": "Conocimientos generales",
+      "points": 20
+    },
+    {
+      "id": "sql",
+      "title": "SQL práctico",
+      "points": 40
+    },
+    {
+      "id": "migracion",
+      "title": "Estructuración y migración de datos",
+      "points": 30
+    },
+    {
+      "id": "creacion_tablas",
+      "title": "Creación y relación de tablas",
+      "points": 10
+    }
+  ],
+  "questions": [
+    {
+      "id": "Q01",
+      "section": "fundamentos",
+      "type": "multiple_choice",
+      "points": 4,
+      "prompt": "¿Cuál es la función de una llave primaria (PRIMARY KEY) en una tabla?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Permitir que todos los registros tengan el mismo identificador."
+        },
+        {
+          "id": "b",
+          "text": "Identificar de manera única cada registro."
+        },
+        {
+          "id": "c",
+          "text": "Almacenar únicamente datos numéricos."
+        },
+        {
+          "id": "d",
+          "text": "Ordenar automáticamente los registros alfabéticamente."
+        }
+      ],
+      "grading": {
+        "correct_option": "b"
+      }
+    },
+    {
+      "id": "Q02",
+      "section": "fundamentos",
+      "type": "multiple_choice",
+      "points": 4,
+      "prompt": "¿Qué es una llave foránea (FOREIGN KEY)?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Una contraseña de acceso a la base de datos."
+        },
+        {
+          "id": "b",
+          "text": "Un campo utilizado únicamente para almacenar fechas."
+        },
+        {
+          "id": "c",
+          "text": "Un campo que permite relacionar registros entre tablas."
+        },
+        {
+          "id": "d",
+          "text": "Un respaldo de la llave primaria."
+        }
+      ],
+      "grading": {
+        "correct_option": "c"
+      }
+    },
+    {
+      "id": "Q03",
+      "section": "fundamentos",
+      "type": "multiple_choice",
+      "points": 4,
+      "prompt": "¿Qué instrucción SQL se utiliza para obtener información de una tabla?",
+      "options": [
+        {
+          "id": "a",
+          "text": "INSERT"
+        },
+        {
+          "id": "b",
+          "text": "DELETE"
+        },
+        {
+          "id": "c",
+          "text": "SELECT"
+        },
+        {
+          "id": "d",
+          "text": "UPDATE"
+        }
+      ],
+      "grading": {
+        "correct_option": "c"
+      }
+    },
+    {
+      "id": "Q04",
+      "section": "fundamentos",
+      "type": "multiple_choice",
+      "points": 4,
+      "prompt": "¿Qué tipo de dato sería más adecuado para almacenar un número telefónico?",
+      "options": [
+        {
+          "id": "a",
+          "text": "INT"
+        },
+        {
+          "id": "b",
+          "text": "VARCHAR"
+        },
+        {
+          "id": "c",
+          "text": "DATE"
+        },
+        {
+          "id": "d",
+          "text": "BOOLEAN"
+        }
+      ],
+      "grading": {
+        "correct_option": "b"
+      }
+    },
+    {
+      "id": "Q05",
+      "section": "fundamentos",
+      "type": "multiple_choice",
+      "points": 4,
+      "prompt": "¿Qué significa NULL en una base de datos?",
+      "options": [
+        {
+          "id": "a",
+          "text": "El valor es cero."
+        },
+        {
+          "id": "b",
+          "text": "El campo contiene un espacio."
+        },
+        {
+          "id": "c",
+          "text": "El campo no tiene un valor registrado."
+        },
+        {
+          "id": "d",
+          "text": "El registro está duplicado."
+        }
+      ],
+      "grading": {
+        "correct_option": "c"
+      }
+    },
+    {
+      "id": "Q06",
+      "section": "sql",
+      "type": "sql_text",
+      "points": 10,
+      "prompt": "Escribe una consulta SQL que muestre únicamente el nombre y el correo de todos los clientes.",
+      "tables": [
+        {
+          "name": "Clientes",
+          "columns": [
+            "id_cliente",
+            "nombre",
+            "correo"
+          ],
+          "rows": [
+            [
+              1,
+              "Ana Ruiz",
+              "ana@correo.com"
+            ],
+            [
+              2,
+              "Luis Mora",
+              "luis@correo.com"
+            ],
+            [
+              3,
+              "Erika Soto",
+              "erika@correo.com"
+            ]
+          ]
+        },
+        {
+          "name": "Pedidos",
+          "columns": [
+            "id_pedido",
+            "id_cliente",
+            "monto"
+          ],
+          "rows": [
+            [
+              101,
+              1,
+              1500
+            ],
+            [
+              102,
+              2,
+              900
+            ],
+            [
+              103,
+              1,
+              1200
+            ],
+            [
+              104,
+              3,
+              2500
+            ]
+          ]
+        }
+      ],
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "SELECT nombre, correo FROM Clientes;",
+        "rubric": [
+          {
+            "criterion": "Selecciona exactamente nombre y correo",
+            "points": 6
+          },
+          {
+            "criterion": "Consulta correctamente la tabla Clientes",
+            "points": 4
+          }
+        ],
+        "notes": "Aceptar cambios de mayúsculas/minúsculas, alias y formato válidos; no exigir texto idéntico."
+      }
+    },
+    {
+      "id": "Q07",
+      "section": "sql",
+      "type": "sql_text",
+      "points": 10,
+      "prompt": "Escribe una consulta SQL que muestre los pedidos cuyo monto sea mayor a $1,000.",
+      "tables": [
+        {
+          "name": "Clientes",
+          "columns": [
+            "id_cliente",
+            "nombre",
+            "correo"
+          ],
+          "rows": [
+            [
+              1,
+              "Ana Ruiz",
+              "ana@correo.com"
+            ],
+            [
+              2,
+              "Luis Mora",
+              "luis@correo.com"
+            ],
+            [
+              3,
+              "Erika Soto",
+              "erika@correo.com"
+            ]
+          ]
+        },
+        {
+          "name": "Pedidos",
+          "columns": [
+            "id_pedido",
+            "id_cliente",
+            "monto"
+          ],
+          "rows": [
+            [
+              101,
+              1,
+              1500
+            ],
+            [
+              102,
+              2,
+              900
+            ],
+            [
+              103,
+              1,
+              1200
+            ],
+            [
+              104,
+              3,
+              2500
+            ]
+          ]
+        }
+      ],
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "SELECT * FROM Pedidos WHERE monto > 1000;",
+        "rubric": [
+          {
+            "criterion": "Utiliza SELECT válido",
+            "points": 3
+          },
+          {
+            "criterion": "Consulta la tabla Pedidos",
+            "points": 3
+          },
+          {
+            "criterion": "Filtra monto > 1000 (estricto, no >=)",
+            "points": 4
+          }
+        ],
+        "notes": "Aceptar lista explícita de columnas o SELECT *; no ejecutar respuestas."
+      }
+    },
+    {
+      "id": "Q08",
+      "section": "sql",
+      "type": "sql_text",
+      "points": 10,
+      "prompt": "Escribe una consulta SQL que muestre el nombre del cliente, el ID del pedido y el monto correspondiente a cada pedido. Relaciona ambas tablas.",
+      "tables": [
+        {
+          "name": "Clientes",
+          "columns": [
+            "id_cliente",
+            "nombre",
+            "correo"
+          ],
+          "rows": [
+            [
+              1,
+              "Ana Ruiz",
+              "ana@correo.com"
+            ],
+            [
+              2,
+              "Luis Mora",
+              "luis@correo.com"
+            ],
+            [
+              3,
+              "Erika Soto",
+              "erika@correo.com"
+            ]
+          ]
+        },
+        {
+          "name": "Pedidos",
+          "columns": [
+            "id_pedido",
+            "id_cliente",
+            "monto"
+          ],
+          "rows": [
+            [
+              101,
+              1,
+              1500
+            ],
+            [
+              102,
+              2,
+              900
+            ],
+            [
+              103,
+              1,
+              1200
+            ],
+            [
+              104,
+              3,
+              2500
+            ]
+          ]
+        }
+      ],
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "SELECT c.nombre, p.id_pedido, p.monto FROM Clientes c INNER JOIN Pedidos p ON c.id_cliente = p.id_cliente;",
+        "rubric": [
+          {
+            "criterion": "Relaciona ambas tablas usando JOIN (u otra sintaxis equivalente correcta)",
+            "points": 4
+          },
+          {
+            "criterion": "Utiliza la condición de unión por id_cliente",
+            "points": 3
+          },
+          {
+            "criterion": "Selecciona nombre, id_pedido y monto correctos",
+            "points": 3
+          }
+        ],
+        "notes": "Aceptar INNER JOIN o JOIN y otras formas equivalentes válidas."
+      }
+    },
+    {
+      "id": "Q09",
+      "section": "sql",
+      "type": "sql_text",
+      "points": 10,
+      "prompt": "Escribe una consulta SQL que muestre cuántos pedidos ha realizado cada cliente, utilizando su id_cliente.",
+      "tables": [
+        {
+          "name": "Clientes",
+          "columns": [
+            "id_cliente",
+            "nombre",
+            "correo"
+          ],
+          "rows": [
+            [
+              1,
+              "Ana Ruiz",
+              "ana@correo.com"
+            ],
+            [
+              2,
+              "Luis Mora",
+              "luis@correo.com"
+            ],
+            [
+              3,
+              "Erika Soto",
+              "erika@correo.com"
+            ]
+          ]
+        },
+        {
+          "name": "Pedidos",
+          "columns": [
+            "id_pedido",
+            "id_cliente",
+            "monto"
+          ],
+          "rows": [
+            [
+              101,
+              1,
+              1500
+            ],
+            [
+              102,
+              2,
+              900
+            ],
+            [
+              103,
+              1,
+              1200
+            ],
+            [
+              104,
+              3,
+              2500
+            ]
+          ]
+        }
+      ],
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "SELECT id_cliente, COUNT(*) AS total_pedidos FROM Pedidos GROUP BY id_cliente;",
+        "rubric": [
+          {
+            "criterion": "Utiliza COUNT correctamente",
+            "points": 4
+          },
+          {
+            "criterion": "Agrupa por id_cliente con GROUP BY",
+            "points": 4
+          },
+          {
+            "criterion": "Muestra id_cliente y utiliza Pedidos",
+            "points": 2
+          }
+        ],
+        "notes": "Aceptar COUNT(id_pedido) y alias distintos si el resultado es correcto."
+      }
+    },
+    {
+      "id": "Q10",
+      "section": "migracion",
+      "type": "open_text",
+      "points": 10,
+      "prompt": "Una empresa tiene un Excel donde cada fila representa una venta y se repiten los datos del cliente. Explica: a) ¿Por qué conviene separar los clientes y sus ventas en dos tablas? b) ¿Qué campo utilizarías para relacionarlas? c) ¿Cuál sería la llave primaria y cuál la llave foránea?",
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "Separar tablas Clientes y Ventas reduce redundancia y anomalías; Clientes.id_cliente es PRIMARY KEY; Ventas.id_venta es PRIMARY KEY; Ventas.id_cliente es FOREIGN KEY que referencia Clientes.id_cliente.",
+        "rubric": [
+          {
+            "criterion": "Explica por qué separar clientes y ventas evita redundancia e inconsistencias",
+            "points": 3
+          },
+          {
+            "criterion": "Identifica llaves primarias apropiadas en ambas tablas",
+            "points": 4
+          },
+          {
+            "criterion": "Define correctamente la llave foránea en Ventas hacia Clientes",
+            "points": 3
+          }
+        ],
+        "notes": "No exigir el nombre exacto de los campos; valorar el modelo relacional correcto."
+      }
+    },
+    {
+      "id": "Q11",
+      "section": "migracion",
+      "type": "open_text",
+      "points": 10,
+      "prompt": "Revisa estos datos de Excel. Identifica al menos tres aspectos que deberías revisar o corregir antes de importar la información a SQL y explica cómo los solucionarías.",
+      "tables": [
+        {
+          "name": "Clientes_Excel",
+          "columns": [
+            "ID",
+            "Nombre",
+            "Teléfono",
+            "Correo"
+          ],
+          "rows": [
+            [
+              "0012",
+              "Ana Ruiz",
+              "5512345678",
+              "ana@correo.com"
+            ],
+            [
+              "0012",
+              "Ana Ruiz",
+              "5512345678",
+              "ana@correo.com"
+            ],
+            [
+              "0013",
+              "Luis Mora",
+              "551234567A",
+              ""
+            ],
+            [
+              "0014",
+              "Erika Soto",
+              "5512345679",
+              "erika@correo.com"
+            ]
+          ]
+        }
+      ],
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "Detectar la fila duplicada (ID 0012), un teléfono inválido por contener letra (ID 0013), el correo vacío (ID 0013), y conservar correctamente los ceros iniciales de los IDs cuando son significativos. Validar con fuente antes de modificar; documentar reglas y evitar borrar datos sin revisión.",
+        "rubric": [
+          {
+            "criterion": "Detecta y plantea tratamiento seguro para el registro duplicado",
+            "points": 4
+          },
+          {
+            "criterion": "Detecta y plantea validación del teléfono con letra",
+            "points": 3
+          },
+          {
+            "criterion": "Detecta y plantea manejo de correo faltante O de ceros iniciales en IDs",
+            "points": 3
+          }
+        ],
+        "notes": "Aceptar otras tres observaciones bien fundamentadas y soluciones razonables; repartir hasta 10 puntos considerando diagnóstico y tratamiento seguro. No exigir borrar registros sin verificar el origen."
+      }
+    },
+    {
+      "id": "Q12",
+      "section": "migracion",
+      "type": "open_text",
+      "points": 10,
+      "prompt": "La empresa tiene un Excel con 10,000 registros de clientes y quiere migrarlo a SQL. Describe los pasos que seguirías para una migración ordenada y para comprobar que la información se guardó correctamente. No necesitas mencionar herramientas ni escribir código.",
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "Respaldar archivo original, inspeccionar campos y calidad, diseñar estructura y tipos, validar y limpiar datos, probar carga en entorno de prueba o staging, cargar y verificar conteos e integridad, registrar errores y respaldos.",
+        "rubric": [
+          {
+            "criterion": "Respalda el origen e inspecciona datos",
+            "points": 2
+          },
+          {
+            "criterion": "Define estructura y correspondencia de columnas y tipos",
+            "points": 2
+          },
+          {
+            "criterion": "Valida y limpia errores/duplicados de forma controlada",
+            "points": 2
+          },
+          {
+            "criterion": "Realiza importación de prueba y luego la carga final",
+            "points": 2
+          },
+          {
+            "criterion": "Verifica conteos e integridad y documenta errores",
+            "points": 2
+          }
+        ],
+        "notes": "Aceptar otras secuencias lógicas que prevengan pérdida de información."
+      }
+    },
+    {
+      "id": "Q13",
+      "section": "creacion_tablas",
+      "type": "sql_text",
+      "points": 10,
+      "prompt": "Ya existe la tabla Clientes con las columnas id_cliente (INTEGER PRIMARY KEY), nombre (VARCHAR(100)) y correo (VARCHAR(150)). Escribe la instrucción SQL para crear una tabla llamada Direcciones que permita registrar varias direcciones de un mismo cliente. La nueva tabla debe incluir los campos id_direccion, id_cliente, calle, ciudad y codigo_postal. Define una PRIMARY KEY para Direcciones y una FOREIGN KEY que relacione id_cliente con Clientes.id_cliente. El campo id_cliente debe ser obligatorio. Elige tipos de datos adecuados para cada columna. No es necesario insertar registros.",
+      "tables": [
+        {
+          "name": "Clientes",
+          "columns": [
+            "id_cliente (INTEGER PRIMARY KEY)",
+            "nombre (VARCHAR(100))",
+            "correo (VARCHAR(150))"
+          ],
+          "rows": [
+            [
+              1,
+              "Ana Ruiz",
+              "ana@correo.com"
+            ],
+            [
+              2,
+              "Luis Mora",
+              "luis@correo.com"
+            ],
+            [
+              3,
+              "Erika Soto",
+              "erika@correo.com"
+            ]
+          ]
+        }
+      ],
+      "grading": {
+        "mode": "manual",
+        "reference_answer": "CREATE TABLE Direcciones (\n    id_direccion INTEGER PRIMARY KEY,\n    id_cliente INTEGER NOT NULL,\n    calle VARCHAR(150),\n    ciudad VARCHAR(100),\n    codigo_postal VARCHAR(10),\n    FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente)\n);",
+        "rubric": [
+          {
+            "criterion": "Utiliza CREATE TABLE Direcciones y define los cinco campos solicitados",
+            "points": 2
+          },
+          {
+            "criterion": "Emplea tipos de datos adecuados (incluido codigo_postal como texto, para conservar posibles ceros iniciales)",
+            "points": 2
+          },
+          {
+            "criterion": "Define id_direccion como PRIMARY KEY o clave primaria equivalente",
+            "points": 2
+          },
+          {
+            "criterion": "Define FOREIGN KEY (id_cliente) REFERENCES Clientes(id_cliente) de forma válida",
+            "points": 3
+          },
+          {
+            "criterion": "Declara id_cliente obligatorio (NOT NULL)",
+            "points": 1
+          }
+        ],
+        "notes": "Aceptar SQL válido en SQLite, PostgreSQL, MySQL o SQL Server, ajustando sintaxis de autoincremento cuando corresponda. No exigir coincidencia textual. No ejecutar código aportado por candidatos."
+      }
+    }
+  ],
+  "internal_notes": "Archivo de importación SOLO para servidor/administración. NO poner en /static ni public, ni incluir grading, reference_answer, rubric, correct_option o notas internas en respuestas de la API para el candidato. Guardar respuestas y calificaciones en SQLite. Esta es una NUEVA versión del examen: NO sobrescribir la versión anterior ni modificar intentos ya realizados. El examen v2 contiene 13 preguntas, dura 50 minutos y suma 100 puntos. La calificación de Q13 es manual."
+}

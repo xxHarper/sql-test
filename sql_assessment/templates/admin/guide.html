@@ -3,7 +3,7 @@
 {% from '_tables.html' import table %}
 {% block content %}<main id="main" class="reading page">
 <div class="eyebrow">SOLO PARA EVALUADORES</div><h1>Guía de calificación</h1>
-<form method="get" class="stack"><label for="version-id">Evaluación y versión</label><select id="version-id" name="version_id">{% for v in versions %}<option value="{{ v.id }}" {% if v.id==exam.id %}selected{% endif %}>{{ v.title }} · {{ v.exam_id }} · versión {{ v.version }}</option>{% endfor %}</select><button class="button secondary" type="submit">Consultar versión</button></form>
+<form method="get" class="stack"><label for="version-id">Evaluación y versión</label><select id="version-id" name="version_id">{% for v in versions %}<option value="{{ v.id }}" {% if v.id==exam.id %}selected{% endif %}>{{ v.title }} · {{ v.exam_id }} · revisión {{ v.version }}</option>{% endfor %}</select><button class="button secondary" type="submit">Consultar versión</button></form>
 <h2>{{ exam.title }}</h2><p class="muted">{{ exam.description }}</p>
 <div class="notice info">{{ exam.question_count }} preguntas · {{ exam.max_score }} puntos · {{ exam.manual_count }} preguntas de revisión manual.</div>
 {% for q in questions %}<section class="card guide-card"><div class="card-topline"><span class="eyebrow">{{ q.source_id }} · {{ q.section }}</span><span class="badge">{{ q.points }} puntos</span></div>

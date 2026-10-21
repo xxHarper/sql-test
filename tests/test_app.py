@@ -1,6 +1,7 @@
 """Functional and security regression tests. No real candidate records are used."""
 import csv
 import io
+import json
 import tempfile
 import threading
 import time
@@ -11,7 +12,7 @@ from unittest.mock import patch
 from werkzeug.security import generate_password_hash
 from sql_assessment import create_app
 from sql_assessment.db import classification, expire_attempts, get_db
-from exam_fixture import QUESTIONS
+from exam_fixture import DOCUMENT, QUESTIONS
 
 
 class AssessmentTests(unittest.TestCase):
@@ -23,7 +24,10 @@ class AssessmentTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.clock = 1_800_000_000
-        self.config = dict(TESTING=True, DATABASE=str(Path(self.temp.name) / 'test.sqlite3'), NOW=lambda: self.clock)
+        exams = Path(self.temp.name) / 'exams'
+        exams.mkdir()
+        (exams / 'v1.json').write_text(json.dumps(DOCUMENT), encoding='utf-8')
+        self.config = dict(TESTING=True, DATABASE=str(Path(self.temp.name) / 'test.sqlite3'), EXAMS_DIR=str(exams), NOW=lambda: self.clock)
         self.app = create_app(self.config)
         self.client = self.app.test_client()
         self.admin = self.app.test_client()

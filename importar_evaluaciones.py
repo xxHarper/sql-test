@@ -18,7 +18,7 @@ def main():
         else:
             app = create_app({'EXAMS_DIR':str(args.directorio.resolve())})
             for result in app.extensions['exam_imports']:
-                print(f'{result["exam_id"]} · versión {result["version"]} · {"nueva" if result["created"] else "ya existente, sin duplicar"}')
+                print(f'{result["exam_id"]} · revisión {result["version"]} · {"nueva" if result["created"] else "ya existente, sin duplicar"}')
     except ExamValidationError as error:
         raise SystemExit(str(error))
 
